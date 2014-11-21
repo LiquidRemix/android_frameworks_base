@@ -112,5 +112,11 @@
             android:ellipsize="marquee"
             android:singleLine="true"
             style="@style/TextAppearance.Keyguard" />
+
+        <include layout="@layout/keyguard_shortcuts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"/>
+
     </LinearLayout>
 </com.android.keyguard.KeyguardStatusView>
