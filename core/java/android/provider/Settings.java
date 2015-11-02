@@ -6075,9 +6075,20 @@ public final class Settings {
           */
          public static final String VOLUME_DIALOG_TIMEOUT = "volume_dialog_timeout";
 
-         /** @hide */
-         private static final Validator VOLUME_DIALOG_TIMEOUT_VALIDATOR =
-                new SettingsValidators.InclusiveIntegerRangeValidator(500, 10000);;
+	    /** @hide */
+        private static final Validator VOLUME_DIALOG_TIMEOUT_VALIDATOR =
+	        new SettingsValidators.InclusiveIntegerRangeValidator(500, 10000);;
+
+        /**
+         * Volume key controls ringtone or media sound stream
+         * @hide
+         */
+        public static final String VOLUME_KEYS_CONTROL_RING_TONE =
+                "volume_keys_control_ring_tone";
+
+        /** @hide */
+        private static final Validator VOLUME_KEYS_CONTROL_RING_TONE_VALIDATOR =
+               BOOLEAN_VALIDATOR;
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
@@ -6174,6 +6185,8 @@ public final class Settings {
             STATUS_BAR_TICKER_TICK_DURATION,
             VOLUME_DIALOG_TIMEOUT,
             GLOBAL_ACTIONS_SCREENRECORD,
+            STATUS_BAR_TICKER_TICK_DURATION,
+            VOLUME_KEYS_CONTROL_RING_TONE,
         };
 
         /**
@@ -6344,6 +6357,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(NETWORK_TRAFFIC_TYPE);
             PRIVATE_SETTINGS.add(NETWORK_TRAFFIC_AUTOHIDE_THRESHOLD);
             PRIVATE_SETTINGS.add(GLOBAL_ACTIONS_SCREENRECORD);
+            PRIVATE_SETTINGS.add(VOLUME_KEYS_CONTROL_RING_TONE);
         }
 
         /**
@@ -6481,6 +6495,7 @@ public final class Settings {
             VALIDATORS.put(STATUS_BAR_TICKER_ANIMATION_MODE, STATUS_BAR_TICKER_ANIMATION_MODE_VALIDATOR);
             VALIDATORS.put(STATUS_BAR_TICKER_TICK_DURATION, STATUS_BAR_TICKER_TICK_DURATION_VALIDATOR);
             VALIDATORS.put(GLOBAL_ACTIONS_SCREENRECORD,GLOBAL_ACTIONS_SCREENRECORD_VALIDATOR);
+            VALIDATORS.put(VOLUME_KEYS_CONTROL_RING_TONE,VOLUME_KEYS_CONTROL_RING_TONE_VALIDATOR);
         }
 
         /**
