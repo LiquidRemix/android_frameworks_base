@@ -225,6 +225,12 @@ public final class PowerManagerService extends SystemService
     /** If turning screen on takes more than this long, we show a warning on logcat. */
     private static final int SCREEN_ON_LATENCY_WARNING_MS = 200;
 
+    // Power feature to Enable High Brightness Mode
+    private static final int POWER_FEATURE_HIGH_BRIGHTNESS_MODE = 1;
+
+    // Default setting for High Brightness Mode.
+    private static final int DEFAULT_HIGH_BRIGHTNESS_MODE = 0;
+
     /** Constants for {@link #shutdownOrRebootInternal} */
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({HALT_MODE_SHUTDOWN, HALT_MODE_REBOOT, HALT_MODE_REBOOT_SAFE_MODE})
@@ -458,6 +464,9 @@ public final class PowerManagerService extends SystemService
     // Whether device supports double tap to wake.
     private boolean mSupportsDoubleTapWakeConfig;
 
+    // Whether device supports High Brightness Mode.
+    private boolean mSupportsHighBrightnessModeConfig;
+
     // The screen off timeout setting value in milliseconds.
     private int mScreenOffTimeoutSetting;
 
@@ -600,6 +609,9 @@ public final class PowerManagerService extends SystemService
     // True if double tap to wake is enabled
     private boolean mDoubleTapWakeEnabled;
 
+    // True if High Brightness Mode is enabled
+    private boolean mHighBrightnessModeEnabled;
+
     private final ArrayList<PowerManagerInternal.LowPowerModeListener> mLowPowerModeListeners
             = new ArrayList<PowerManagerInternal.LowPowerModeListener>();
 
@@ -721,6 +733,7 @@ public final class PowerManagerService extends SystemService
             nativeSetAutoSuspend(false);
             nativeSetInteractive(true);
             nativeSetFeature(POWER_FEATURE_DOUBLE_TAP_TO_WAKE, 0);
+            nativeSetFeature(POWER_FEATURE_HIGH_BRIGHTNESS_MODE,0);
         }
     }
 
@@ -900,6 +913,9 @@ public final class PowerManagerService extends SystemService
         resolver.registerContentObserver(Settings.Secure.getUriFor(
                 Settings.System.PROXIMITY_ON_WAKE),
                 false, mSettingsObserver, UserHandle.USER_ALL);
+        resolver.registerContentObserver(Settings.Secure.getUriFor(
+                Settings.Secure.HIGH_BRIGHTNESS_MODE),
+                false, mSettingsObserver, UserHandle.USER_ALL);
 
         IVrManager vrManager = (IVrManager) getBinderService(Context.VR_SERVICE);
         if (vrManager != null) {
@@ -979,6 +995,8 @@ public final class PowerManagerService extends SystemService
             mProximityWakeLock = ((PowerManager) mContext.getSystemService(Context.POWER_SERVICE))
                     .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ProximityWakeLock");
         }
+        mSupportsHighBrightnessModeConfig = resources.getBoolean(
+                com.android.internal.R.bool.config_supportHighBrightness);
     }
 
     private void updateSettingsLocked() {
@@ -1029,6 +1047,16 @@ public final class PowerManagerService extends SystemService
         final String retailDemoValue = UserManager.isDeviceInDemoMode(mContext) ? "1" : "0";
         if (!retailDemoValue.equals(SystemProperties.get(SYSTEM_PROPERTY_RETAIL_DEMO_ENABLED))) {
             SystemProperties.set(SYSTEM_PROPERTY_RETAIL_DEMO_ENABLED, retailDemoValue);
+        }
+
+        if (mSupportsHighBrightnessModeConfig) {
+            boolean highBrightnessModeEnabled = Settings.Secure.getIntForUser(resolver,
+                    Settings.Secure.HIGH_BRIGHTNESS_MODE, DEFAULT_HIGH_BRIGHTNESS_MODE,
+                            UserHandle.USER_CURRENT) != 0;
+            if (highBrightnessModeEnabled != mHighBrightnessModeEnabled) {
+                mHighBrightnessModeEnabled = highBrightnessModeEnabled;
+                nativeSetFeature(POWER_FEATURE_HIGH_BRIGHTNESS_MODE, mHighBrightnessModeEnabled ? 1 : 0);
+            }
         }
 
         final int oldScreenBrightnessSetting = getCurrentBrightnessSettingLocked();
@@ -2565,6 +2593,10 @@ public final class PowerManagerService extends SystemService
             screenAutoBrightnessAdjustment = Math.max(Math.min(
                     screenAutoBrightnessAdjustment, 1.0f), -1.0f);
 
+            if (mSupportsHighBrightnessModeConfig && mHighBrightnessModeEnabled) {
+                nativeSetFeature(POWER_FEATURE_HIGH_BRIGHTNESS_MODE, 1);
+            }
+
             // Update display power request.
             mDisplayPowerRequest.screenBrightness = screenBrightness;
             mDisplayPowerRequest.screenAutoBrightnessAdjustment =
@@ -3554,6 +3586,7 @@ public final class PowerManagerService extends SystemService
             pw.println("  mScreenBrightnessForVrSetting=" + mScreenBrightnessForVrSetting);
             pw.println("  mDoubleTapWakeEnabled=" + mDoubleTapWakeEnabled);
             pw.println("  mIsVrModeEnabled=" + mIsVrModeEnabled);
+            pw.println("  mHighBrightnessModeEnabled=" + mHighBrightnessModeEnabled);
 
             final int sleepTimeout = getSleepTimeoutLocked();
             final int screenOffTimeout = getScreenOffTimeoutLocked(sleepTimeout);

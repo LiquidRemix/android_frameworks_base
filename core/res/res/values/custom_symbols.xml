@@ -195,4 +195,7 @@
     <java-symbol type="color" name="tooltip_text_light" />
     <java-symbol type="color" name="tooltip_text_dark" />
 
+    <!-- High Brightness Mode -->
+    <java-symbol type="bool" name="config_supportHighBrightness" />
+
 </resources>

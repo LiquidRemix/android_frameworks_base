@@ -41,6 +41,7 @@ import com.android.systemui.qs.tiles.GoogleAssistTile;
 import com.android.systemui.qs.tiles.GoogleNowTile;
 import com.android.systemui.qs.tiles.GoogleVoiceAssistTile;
 import com.android.systemui.qs.tiles.HeadsUpTile;
+import com.android.systemui.qs.tiles.HighBrightnessTile;
 import com.android.systemui.qs.tiles.HotspotTile;
 import com.android.systemui.qs.tiles.HWKeysTile;
 import com.android.systemui.qs.tiles.ImmersiveTile;
@@ -121,6 +122,7 @@ public class QSFactoryImpl implements QSFactory {
         else if (tileSpec.equals("theme")) return new ThemeTile(mHost);
         else if (tileSpec.equals("immersive")) return new ImmersiveTile(mHost);
         else if (tileSpec.equals("soundsearch")) return new SoundSearchTIle(mHost);
+        else if (tileSpec.equals("high_brightness")) return new HighBrightnessTile(mHost);
         // Intent tiles.
         else if (tileSpec.startsWith(IntentTile.PREFIX)) return IntentTile.create(mHost, tileSpec);
         else if (tileSpec.startsWith(CustomTile.PREFIX)) return CustomTile.create(mHost, tileSpec);

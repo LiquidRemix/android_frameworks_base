@@ -347,4 +347,7 @@
     <!-- Sound search QS Tile -->
     <string name="quick_settings_sound_search">Sound search</string>
 
+    <!-- High Brightness Mode Tile -->
+    <string name="quick_settings_high_brightness">High brightness</string>
+
 </resources>

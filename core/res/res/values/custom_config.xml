@@ -131,4 +131,7 @@
     <!-- Slim recents -->
     <integer name="config_recentDefaultDur">150</integer>
 
+    <!-- High Brightness Mode -->
+    <bool name="config_supportHighBrightness">false</bool>
+
 </resources>
