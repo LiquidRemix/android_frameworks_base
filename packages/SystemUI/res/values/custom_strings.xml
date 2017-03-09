@@ -263,4 +263,7 @@
     <string name="qs_show_mini">Mini mode</string>
     <string name="qs_header">Header</string>
 
+    <!-- Weather string format in expanded statusbar header -->
+    <string name="status_bar_weather_format"><xliff:g id="temp">%1$s</xliff:g></string>
+
 </resources>

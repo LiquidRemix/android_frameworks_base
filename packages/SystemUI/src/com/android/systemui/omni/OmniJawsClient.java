@@ -125,7 +125,7 @@ public class OmniJawsClient {
 
     public static interface OmniJawsObserver {
         public void weatherUpdated();
-        public void weatherError(int errorReason);
+        public void weatherError();
     }
 
     private class WeatherUpdateReceiver extends BroadcastReceiver {
@@ -138,7 +138,7 @@ public class OmniJawsClient {
                 }
                 if (action.equals(WEATHER_ERROR)) {
                     int errorReason = intent.getIntExtra(EXTRA_ERROR, 0);
-                    observer.weatherError(errorReason);
+                    observer.weatherError();
                 }
             }
         }

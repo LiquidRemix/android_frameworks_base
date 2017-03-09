@@ -104,7 +104,24 @@
                 android:layout_marginEnd="2dp"
                 android:singleLine="false"
                 android:fontFamily="sans-serif-condensed"
-                android:gravity="right|center_vertical"/>
+                android:gravity="right|center_vertical"
+                android:paddingEnd="2dp" />
+
+          <com.android.systemui.liquid.statusbarweather.StatusBarWeather
+                android:id="@+id/weather_temp_omni"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:maxLines="1"
+                android:gravity="right|center_vertical"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp" />
+
+            <com.android.systemui.liquid.statusbarweather.StatusBarWeatherImage
+                android:id="@+id/weather_image_omni"
+                android:layout_width="24dp"
+                android:layout_height="match_parent"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp" />
 
             <include layout="@layout/system_icons" />
 
