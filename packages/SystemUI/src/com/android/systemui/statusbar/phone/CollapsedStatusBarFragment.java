@@ -76,6 +76,11 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private View mCenterClock;
     private View mLeftClock;
     private int mClockStyle;
+    // statusbar weather
+    private View mWeatherImageView;
+    private View mWeatherTextView;
+    private int mShowWeather;
+
     private final Handler mHandler = new Handler();
 
     private class LiquidSettingsObserver extends ContentObserver {
@@ -116,6 +121,9 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
                     false, this, UserHandle.USER_ALL);
             mContentResolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.STATUSBAR_CLOCK_DATE_POSITION),
+                    false, this, UserHandle.USER_ALL);
+            mContentResolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUSBAR_SHOW_WEATHER_TEMP),
                     false, this, UserHandle.USER_ALL);
         }
 
@@ -170,7 +178,10 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         Dependency.get(DarkIconDispatcher.class).addDarkReceiver(mSignalClusterView);
 		mLiquidLogo = mStatusBar.findViewById(R.id.status_bar_logo);
 		mCustomCarrierLabel = mStatusBar.findViewById(R.id.statusbar_carrier_text);
+		mWeatherTextView = mStatusBar.findViewById(R.id.weather_temp_omni);
+        mWeatherImageView = mStatusBar.findViewById(R.id.weather_image);
 		updateSettings(false);
+
         // Default to showing until we know otherwise.
         showSystemIconArea(false);
         initEmergencyCryptkeeperText();
@@ -383,6 +394,9 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
                 UserHandle.USER_CURRENT) == 1;
 			mShowCarrierLabel = Settings.System.getIntForUser(
                 getContext().getContentResolver(), Settings.System.STATUS_BAR_SHOW_CARRIER, 1,
+                UserHandle.USER_CURRENT);
+			mShowWeather = Settings.System.getIntForUser(
+                getContext().getContentResolver(), Settings.System.STATUSBAR_SHOW_WEATHER_TEMP, 0,
                 UserHandle.USER_CURRENT);
             if (mNotificationIconAreaInner != null) {
                 if (mShowLogo) {
