@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2017 The Nitrogen Project
+     Copyright (C) 2017 The Liquid Remix Project
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+          http://www.apache.org/licenses/LICENSE-2.0
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- HSPA+ for accessibility -->
+    <string name="accessibility_data_connection_hspap">HSPA+</string>
+	
+	<!-- Indication on the keyguard that is shown when the device is charging with a dash charger. Should match keyguard_plugged_in_dash_charging [CHAR LIMIT=40]-->
+    <string name="keyguard_indication_dash_charging_time">Быстрая зарядка (<xliff:g id="charging_time_left" example="4 hours and 2 minutes">%s</xliff:g> до полной)</string>
+    <string name="keyguard_plugged_in_dash_charging">Быстрая зарядка</string>
+
+    <!-- LTE QS Tile -->
+    <string name="qs_lte_label">LTE</string>
+    <string name="lte_on">LTE ВКЛ </string>
+    <string name="lte_off">LTE ВЫКЛ</string>
+
+    <!-- Caffeine QS Tile -->
+    <string name="quick_settings_caffeine_label">Caffeine</string>
+    <string name="accessibility_quick_settings_caffeine_off">Caffeine выкл</string>
+    <string name="accessibility_quick_settings_caffeine_on">Caffeine вкл</string>
+
+    <!-- Power menu -->
+    <string name="global_action_restart_advanced">Расширенная перезагрузка</string>
+    <string name="global_action_restart_recovery">Режим восстановления</string>
+    <string name="global_action_restart_bootloader">Загрузчик</string>
+    <string name="global_action_screenrecord">Запись экрана</string>
+
+    <!-- Reboot/Recovery QS Tile -->
+    <string name="quick_settings_reboot_label">Перезагрузка</string>
+    <string name="quick_settings_reboot_recovery_label">Режим восстановления</string>
+
+    <!-- Statusbar icons -->
+    <string name="statusbar_items_title">Иконки в строке состояния</string>
+
+    <!-- PiP QS Tile -->
+    <string name="quick_settings_pip_label">PiP</string>
+    <string name="quick_settings_pip_tile_app_na">Приложение не поддерживает PiP</string>
+
+    <!-- Screenshot QS Tile -->
+    <string name="quick_settings_screenshot_label">Снимок экрана</string>
+    <string name="quick_settings_region_screenshot_label">Частичный снимок</string>
+
+    <!-- VOLTE icon switch -->
+    <string name="status_bar_volte">VOLTE</string>
+
+    <!-- ADB network QS Tile -->
+    <string name="quick_settings_adb_network">Отладка по сети</string>
+    <string name="quick_settings_network_adb_enabled_label">Отладка по сети</string>
+    <string name="quick_settings_network_adb_disabled_label">Отладка по сети</string>
+
+    <!-- Sound QS Tile -->
+    <string name="quick_settings_sound_label">Звук</string>
+    <string name="quick_settings_sound_ring">Звонок</string>
+    <string name="quick_settings_sound_vibrate">Вибрация</string>
+    <string name="quick_settings_sound_dnd">Не беспокоить</string>
+
+    <!-- Heads Up QS Tile -->
+    <string name="quick_settings_heads_up_label">Всплывающие уведомления</string>
+    <string name="accessibility_quick_settings_heads_up_off">Включить вспл. увед-я</string>
+    <string name="accessibility_quick_settings_heads_up_on">Вылючить вспл. увед-я</string>
+    <string name="accessibility_quick_settings_heads_up_changed_off">Вспл. увед-я выключены</string>
+    <string name="accessibility_quick_settings_heads_up_changed_on">Вспл. увед-я включены</string>
+
+    <!-- Lock screen shortcuts -->
+    <string name="lockscreen_default">По умолчания</string>
+    <string name="lockscreen_hidden">Нет</string>
+    <string name="custom_hint">Проведите от иконки для запуска</string>
+
+    <!-- Heads Up snooze toast -->
+    <string name="heads_up_snooze_message_one_minute"><xliff:g id="string">%s</xliff:g> - Просмотр уведомления отложен на одну минуту.</string>
+    <string name="heads_up_snooze_message"><xliff:g id="string">%s</xliff:g> - Просмотр уведомления отложен на <xliff:g id="number">%d</xliff:g> минут.</string>
+
+    <!-- Screen recording -->
+    <string name="screenrecord_notif_ticker">Экран будет записан</string>
+    <string name="screenrecord_notif_title">Запись экрана</string>
+    <string name="screenrecord_notif_stop">Остановить</string>
+    <string name="screenrecord_notif_pointer_on">Показать указатель</string>
+    <string name="screenrecord_notif_pointer_off">Скрыть указатель</string>
+    <string name="screenrecord_notif_error">Невозможно записать экран</string>
+    <string name="notification_channel_screenrecord">Записи экрана</string>
+
+    <!-- Screenrecord QS Tile -->
+    <string name="quick_settings_screenrecord">Запись экрана</string>
+
+    <!-- Weather QS Tile -->
+    <string name="omnijaws_service_error">Ошибка</string>
+    <string name="omnijaws_service_unkown">Не данных погоды</string>
+    <string name="omnijaws_service_error_long">Ошибка загрузки данных погоды</string>
+    <string name="omnijaws_service_disabled">Сервис отлючен</string>
+    <string name="omnijaws_detail_header">Погода</string>
+    <string name="omnijaws_label_default">Погода</string>
+    <string name="omnijaws_current_text">Сейчас</string>
+    <string name="omnijaws_package_not_available">OmniJaws не доступны</string>
+    <string name="omnijaws_service_last_update">Последнее обновление:</string>
+
+    <!-- Quick settings columns -->
+    <string name="qs_menu_item_columns">Столбцы</string>
+    <string name="qs_menu_item_columns_landscape">Столбцы в ладншафтном режимеe</string>
+    <string name="qs_menu_item_columns_three">3</string>
+    <string name="qs_menu_item_columns_four">4</string>
+    <string name="qs_menu_item_columns_five">5</string>
+    <string name="qs_menu_item_columns_six">6</string>
+    <string name="qs_menu_item_columns_seven">7</string>
+    <string name="qs_menu_item_columns_eight">8</string>
+    <string name="qs_menu_item_columns_nine">9</string>
+    <string name="qs_menu_item_reset">Сброс</string>
+    <string name="qs_menu_item_titles">Показать ярлыки</string>
+
+    <!-- Quick settings rows -->
+    <string name="qs_menu_item_rows">Ряды</string>
+    <string name="qs_menu_item_rows_one">1</string>
+    <string name="qs_menu_item_rows_two">2</string>
+    <string name="qs_menu_item_rows_three">3</string>
+    <string name="qs_menu_item_rows_four">4</string>
+    <string name="qs_menu_item_scroll">Прокрутка</string>
+
+    <!-- Auto brightness QS Switch -->
+    <string name="tuner_quick_settings">Быстрые настройки</string>
+    <string name="tuner_show_brightness_mode">Показать переключатель режима яркости</string>
+    <string name="tuner_show_brightness_new">Показать слайдер яркости</string>
+
+    <!-- Notification: Menu row: Snooze options: 1 hour option. [CHAR LIMIT=50]-->
+    <string name="snooze_option_24_hour">24 часа</string>
+
+    <!-- SysUI Tuner -->
+    <string name="lockscreen_tuner_activity">Ярлыки на заблокированном экране</string>
+
+    <!-- Ambient display and lift gesture Tile -->
+    <string name="quick_settings_doze_notifications_label">Ambient уведомления</string>
+
+    <!-- Expanded Desktop QS Tile -->
+    <string name="quick_settings_expanded_desktop_label">Расширенный раб. стол</string>
+    <string name="quick_settings_expanded_desktop">Расширенный</string>
+    <string name="quick_settings_expanded_desktop_off">Обычный</string>
+    <string name="quick_settings_expanded_navigation_off">Скрыть навиг. панель</string>
+    <string name="quick_settings_expanded_statusbar_off">Скрыть строку состояния</string>
+
+</resources>
