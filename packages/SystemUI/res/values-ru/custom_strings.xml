@@ -32,7 +32,7 @@
     <string name="accessibility_quick_settings_caffeine_on">Caffeine вкл</string>
 
     <!-- Power menu -->
-    <string name="global_action_restart_advanced">Расширенная перезагрузка</string>
+    <string name="global_action_restart_advanced">Расшир. перезагрузка</string>
     <string name="global_action_restart_recovery">Режим восстановления</string>
     <string name="global_action_restart_bootloader">Загрузчик</string>
     <string name="global_action_screenrecord">Запись экрана</string>
