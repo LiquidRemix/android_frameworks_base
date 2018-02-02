@@ -60,6 +60,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private KeyguardMonitor mKeyguardMonitor;
     private NetworkController mNetworkController;
     private LinearLayout mSystemIconArea;
+    private View mWeather, mWeatherImage, mWeatherRight, mWeatherImageRight;
     private View mNotificationIconAreaInner;
     private int mDisabled1;
     private StatusBar mStatusBarComponent;
@@ -125,6 +126,10 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         mDarkIconManager = new DarkIconManager(view.findViewById(R.id.statusIcons));
         Dependency.get(StatusBarIconController.class).addIconGroup(mDarkIconManager);
         mSystemIconArea = mStatusBar.findViewById(R.id.system_icon_area);
+        mWeather = mStatusBar.findViewById(R.id.weather_temp);
+        mWeatherImage = mStatusBar.findViewById(R.id.weather_image);
+        mWeatherRight = mStatusBar.findViewById(R.id.weather_temp_right);
+        mWeatherImageRight = mStatusBar.findViewById(R.id.weather_image_right);
         mSignalClusterView = mStatusBar.findViewById(R.id.signal_cluster);
         mCenterClockLayout = (LinearLayout) mStatusBar.findViewById(R.id.center_clock_layout);
         Dependency.get(DarkIconDispatcher.class).addDarkReceiver(mSignalClusterView);
@@ -233,11 +238,19 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     public void hideSystemIconArea(boolean animate) {
         animateHide(mSystemIconArea, animate, true);
         animateHide(mCenterClockLayout, animate, true);
+        animateHide(mWeather, animate);
+        animateHide(mWeatherImage, animate);
+        animateHide(mWeatherRight, animate);
+        animateHide(mWeatherImageRight, animate);
     }
 
     public void showSystemIconArea(boolean animate) {
         animateShow(mSystemIconArea, animate);
         animateShow(mCenterClockLayout, animate);
+        animateShow(mWeatherImageRight, animate);
+        animateShow(mWeatherRight, animate);
+        animateShow(mWeatherImage, animate);
+        animateShow(mWeather, animate);
     }
 
     public void hideNotificationIconArea(boolean animate) {
