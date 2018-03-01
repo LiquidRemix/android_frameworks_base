@@ -5074,8 +5074,12 @@ public final class Settings {
          */
         public static final String LISTVIEW_ANIMATION = "listview_animation";
 
-        
         public static final String CHOOSER_ACTIVITY_BLACKLIST = "chooser_activity_blacklist";
+
+        /**
+         * @hide
+         */
+        public static final String NOTIFICATION_GUTS_KILL_APP_BUTTON = "notification_guts_kill_app_button";
 
         /**
          * ListView Interpolators
