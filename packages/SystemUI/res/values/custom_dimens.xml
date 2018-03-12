@@ -42,7 +42,7 @@
 
     <!-- Hide QS label -->
     <dimen name="qs_scroller_margin">8dp</dimen>
-    <dimen name="qs_scroller_top_margin">40dp</dimen>
+    <dimen name="qs_scroller_top_margin">35dp</dimen>
     <dimen name="qs_tile_height_wo_label">48dp</dimen>
 
     <!-- Status bar notification ticker -->
@@ -52,9 +52,10 @@
     <dimen name="ticker_text_end_padding">10dp</dimen>
 
     <!-- Quick settings image header -->
-    <dimen name="qs_panel_margin_top">25dp</dimen>
+    <dimen name="qs_panel_margin_top">30dp</dimen>
     <dimen name="qs_panel_margin_top_header">85dp</dimen>
     <dimen name="qs_panel_footer_height">40dp</dimen>
+    <dimen name="qs_panel_mini_mode_diff">30dp</dimen>
 
     <!-- Status bar battery -->
     <dimen name="status_bar_left_clock_end_padding">5dp</dimen>

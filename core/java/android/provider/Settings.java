@@ -4540,6 +4540,11 @@ public final class Settings {
         /**
          * @hide
          */
+        public static final String QS_SHOW_MINI = "qs_show_mini";
+
+        /**
+         * @hide
+         */
         public static final String QS_LAYOUT_COLUMNS = "qs_layout_columns";
 
         /**
