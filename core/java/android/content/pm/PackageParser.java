@@ -1685,12 +1685,14 @@ public class PackageParser {
                     public void run() {
                         try {
                             long tid = Thread.currentThread().getId();
+                            final StrictJarFile tempJarFile;
                             synchronized (strictJarFiles) {
                                 if (strictJarFiles.get(Long.toString(tid)) == null) {
                                     strictJarFiles.put(Long.toString(tid), sJarFiles[vData.index++]);
                                 }
+                                tempJarFile = strictJarFiles.get(Long.toString(tid));
                             }
-                            final Certificate[][] entryCerts = loadCertificates(strictJarFiles.get(Long.toString(tid)), entry);
+                            final Certificate[][] entryCerts = loadCertificates(tempJarFile, entry);
                             if (ArrayUtils.isEmpty(entryCerts)) {
                                 throw new PackageParserException(INSTALL_PARSE_FAILED_NO_CERTIFICATES,
                                         "Package " + apkPath + " has no certificates at entry "
