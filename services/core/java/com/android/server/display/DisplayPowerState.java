@@ -86,7 +86,6 @@ final class DisplayPowerState {
         // actually have a chance to be applied.
         mScreenState = Display.STATE_ON;
         mScreenBrightness = PowerManager.BRIGHTNESS_ON;
-        scheduleScreenUpdate();
 
         mColorFadePrepared = false;
         mColorFadeLevel = 1.0f;
