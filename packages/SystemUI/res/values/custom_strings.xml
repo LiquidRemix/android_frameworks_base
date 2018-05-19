@@ -144,4 +144,10 @@
     <string name="gaming_mode_dialog_message">When gaming mode is enabled, your ringer mode will change to vibrate mode, all heads-up messages will be disabled and hardware keys will be turned off. Media volume will be increased to the maximum value. All the disabled settings will be reset to default once you exit Gaming Mode.</string>
     <string name="accessibility_quick_settings_gaming_mode_on">Gaming mode on</string>
     <string name="accessibility_quick_settings_gaming_mode_off">Gaming mode off</string>
+
+    <!-- AmbientPlay: The contents of the displayed recognition. -->
+    <string name="ambient_recognition_notification">Now Playing</string>
+    <string name="ambient_recognition_notification_channel">Recognized Music Notifications</string>
+    <string name="ambient_recognition_information">%1$s by %2$s</string>
+
 </resources>
