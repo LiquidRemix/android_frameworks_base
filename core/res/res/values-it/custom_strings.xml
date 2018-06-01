@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/**
+ * Copyright (c) 2017, The LiquidRemix Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Advanced reboot -->
+    <string name="reboot_to_recovery_title">Recovery</string>
+    <string name="reboot_to_recovery_message">Riavvio in recovery</string>
+    <string name="reboot_to_bootloader_title">Bootloader</string>
+    <string name="reboot_to_bootloader_message">Riavvio in bootloader</string>
+    <string name="reboot_title">Riavvio</string>
+    <string name="reboot_message">Riavvio del sistema</string>
+
+    <!-- Vendor warning -->
+    <string name="system_error_vendorprint">L\'immagine del fornitore non corrisponde al sistema. Si prega di installare il <xliff:g id="string">%s</xliff:g> immagine del fornitore per il tuo dispositivo</string>
+
+    <!-- ADB notifications -->
+    <string name="adb_net_active_notification_title">ADB su rete abilitata</string>
+    <string name="adb_both_active_notification_title">ADB su USB &amp; rete abilitata</string>
+    <string name="adb_active_generic_notification_message">Tocca per disabilitare il debug.</string>
+
+    <!-- Fake package signature -->
+    <string name="permlab_fakePackageSignature">Firma del pacchetto Spoof</string>
+    <string name="permdesc_fakePackageSignature">Consente all\'applicazione di fingere di essere un\'app diversa. Le applicazioni dannose potrebbero essere in grado di utilizzarlo per accedere ai dati delle applicazioni private. Concedi questa autorizzazione con cautela!</string>
+
+    <!-- DUI -->
+    <string name="permlab_toggleNavigationEditor">Modifica controlli di navigazione</string>
+    <string name="permdesc_toggleNavigationEditor">Consente a un\'applicazione di controllare le modifiche della barra di navigazione.</string>
+
+    <!-- Pocket Lock -->
+    <string name="pocket_lock_message_long_press">Pressione prolungata sul pulsante di accensione per interagire</string>
+
+</resources>
