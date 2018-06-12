@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/**
+ * Copyright (c) 2017, The LiquidRemix Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Recents task locking -->
+    <string name="accessibility_lock_task">Reddedilen <xliff:g id="task">%1$s</xliff:g> olmasını engelle</string>
+    <string name="accessibility_unlock_task">Reddedilecek <xliff:g id="task">%1$s</xliff:g> izin ver</string>
+
+    <!-- LTE QS Tile -->
+    <string name="qs_lte_label">LTE</string>
+    <string name="lte_on">LTE açık </string>
+    <string name="lte_off">LTE kapalı</string>
+
+    <!-- Caffeine QS Tile -->
+    <string name="quick_settings_caffeine_label">Kafein</string>
+    <string name="accessibility_quick_settings_caffeine_off">Kafein kapalı</string>
+    <string name="accessibility_quick_settings_caffeine_on">Kafein açık</string>
+
+   	<!-- Compass QS Tile -->
+    <string name="quick_settings_compass_label">Pusula</string>
+    <string name="quick_settings_compass_value"><xliff:g id="degrees">%1$.0f</xliff:g>\u00b0 <xliff:g id="direction">%2$s</xliff:g></string>
+    <string name="quick_settings_compass_init">Başlatılıyor\u2026</string>
+    <string name="accessibility_quick_settings_compass_off">Pusula kapalı.</string>
+    <string name="accessibility_quick_settings_compass_on">Pusula açık.</string>
+    <string name="accessibility_quick_settings_compass_changed_off">Pusula kapatıldı.</string>
+    <string name="accessibility_quick_settings_compass_changed_on">Pusula açıldı.</string>
+    <string name="quick_settings_compass_N">N</string>
+    <string name="quick_settings_compass_NE">NE</string>
+    <string name="quick_settings_compass_E">E</string>
+    <string name="quick_settings_compass_SE">SE</string>
+    <string name="quick_settings_compass_S">S</string>
+    <string name="quick_settings_compass_SW">SW</string>
+    <string name="quick_settings_compass_W">W</string>
+    <string name="quick_settings_compass_NW">NW</string>
+
+    <!-- Advanced reboot -->
+    <string name="global_action_restart_advanced">Gelişmiş yeniden başlatma</string>
+    <string name="global_action_screenrecord">Ekran kaydı</string>
+
+    <!-- Reboot/Recovery QS Tile -->
+    <string name="quick_settings_reboot_label">Yeniden başlat</string>
+    <string name="quick_settings_reboot_recovery_label">Kurtarma modu (Recovery)</string>
+
+    <!-- SystemUI tuner -->
+    <string name="statusbar_items_title">Durum çubuğu simgesi</string>
+
+    <!-- PiP QS Tile -->
+    <string name="quick_settings_pip_label">PiP</string>
+    <string name="quick_settings_pip_tile_app_na">Uygulama PiP\'i desteklemiyor</string>
+
+    <!-- Screenshot QS Tile -->
+    <string name="quick_settings_screenshot_label">Ekran görüntüsü</string>
+    <string name="quick_settings_region_screenshot_label">Kısmi ekran görüntüsü</string>
+
+    <!-- Volte icon switch -->
+    <string name="status_bar_volte">VOLTE</string>
+
+    <!-- ADB network QS Tile -->
+    <string name="quick_settings_adb_network">ADB ağı</string>
+    <string name="quick_settings_network_adb_enabled_label">Ağ üzerinden Adb etkin</string>
+    <string name="quick_settings_network_adb_disabled_label">Ağ üzerinden Adb devre dışı</string>
+
+    <!-- Sound QS Tile -->
+    <string name="quick_settings_sound_label">Ses</string>
+    <string name="quick_settings_sound_ring">Zil sesi</string>
+    <string name="quick_settings_sound_vibrate">Titreşim</string>
+    <string name="quick_settings_sound_dnd">Rahatsız etmeyin</string>
+
+    <!-- Heads Up QS Tile -->
+    <string name="quick_settings_heads_up_label">Bildirim pencereleri</string>
+    <string name="accessibility_quick_settings_heads_up_off">Bildirim pencereleri kapalı.</string>
+    <string name="accessibility_quick_settings_heads_up_on">Bildirim pencereleri açık.</string>
+    <string name="accessibility_quick_settings_heads_up_changed_off">Bildirim pencereleri kapatıldı.</string>
+    <string name="accessibility_quick_settings_heads_up_changed_on">Bildirim pencereleri açıldı.</string>
+
+    <!-- Heads Up snooze -->
+    <string name="heads_up_snooze_message_one_minute"><xliff:g id="string">%s</xliff:g> - Bildirim pencereleri 1 dakikalığına erteleniyor.</string>
+    <string name="heads_up_snooze_message"><xliff:g id="string">%s</xliff:g> - Bildirim pencereleri <xliff:g id="number">%d</xliff:g> dakika kadar erteleniyor.</string>
+
+    <!-- Dash charging support -->
+    <string name="keyguard_indication_dash_charging_time">Hızlı şarj oluyor (tam dolmasına <xliff:g id="charging_time_left" example="4 hours and 2 minutes">%s</xliff:g> kaldı)</string>
+    <string name="keyguard_plugged_in_dash_charging">Hızlı şarj oluyor</string>
+
+    <!-- Indication on the keyguard that is shown when the device is charging with a turbo power charger. Should match keyguard_plugged_in_turbo_power_charging [CHAR LIMIT=40]-->
+    <string name="keyguard_indication_turbo_power_time">Turbo şarj bağlandı (tam dolmasına <xliff:g id="charging_time_left">%s</xliff:g> kaldı)</string>
+    <string name="keyguard_plugged_in_turbo_power_charging">Turbo şarj bağlandı</string>
+
+    <!-- Screenrecord -->
+    <string name="screenrecord_notif_ticker">Ekran kaydediliyor</string>
+    <string name="screenrecord_notif_title">Ekran kaydediliyor</string>
+    <string name="screenrecord_notif_stop">Durdur</string>
+    <string name="screenrecord_notif_pointer_on">İşaretçiyi göster</string>
+    <string name="screenrecord_notif_pointer_off">İşaretçiyi gizle</string>
+    <string name="screenrecord_notif_error">Ekran kaydedilemiyor</string>
+    <string name="notification_channel_screenrecord">Ekran kayıtları</string>
+
+    <!-- Screenrecord QS Tile -->
+    <string name="quick_settings_screenrecord">Ekran kaydı</string>
+
+    <!-- Lock screen shortcut defaults -->
+    <string name="lockscreen_default">Varsayılan</string>
+    <string name="lockscreen_hidden">Yok</string>
+    <string name="custom_hint">Başlatmak için simgede hızlıca kaydır</string>
+
+    <!-- VPN icon -->
+    <string name="status_bar_vpn">VPN</string>
+
+    <!-- Roaming icon -->
+    <string name="status_bar_roaming">Dolaşım</string>
+
+    <!-- HW keys QS Tile -->
+    <string name="accessibility_quick_settings_hwkeys_on">Donanım tuşları etkin</string>
+    <string name="accessibility_quick_settings_hwkeys_off">Donanım tuşları devre dışı</string>
+    <string name="quick_settings_hwkeys_label">Donanım tuşları</string>
+
+    <!-- Volume QS Tile -->
+    <string name="accessibility_quick_settings_volume_panel">Ses</string>
+    <string name="quick_settings_volume_panel_label">Ses seviyesi</string>
+
+    <!-- QS columns -->
+    <string name="qs_menu_item_columns">Sütunlar</string>
+    <string name="qs_menu_item_columns_landscape">Sütunlar yatay</string>
+    <string name="qs_menu_item_columns_three">3</string>
+    <string name="qs_menu_item_columns_four">4</string>
+    <string name="qs_menu_item_columns_five">5</string>
+    <string name="qs_menu_item_columns_six">6</string>
+    <string name="qs_menu_item_columns_seven">7</string>
+    <string name="qs_menu_item_columns_eight">8</string>
+    <string name="qs_menu_item_columns_nine">9</string>
+    <string name="qs_menu_item_reset">Sıfırla</string>
+    <string name="qs_menu_item_titles">Etiketleri göster</string>
+
+    <!-- QS rows -->
+    <string name="qs_menu_item_rows">Satırlar</string>
+    <string name="qs_menu_item_rows_one">1</string>
+    <string name="qs_menu_item_rows_two">2</string>
+    <string name="qs_menu_item_rows_three">3</string>
+    <string name="qs_menu_item_rows_four">4</string>
+    <string name="qs_menu_item_scroll">Hızlı çubuğu kaydırma</string>
+
+    <!-- Sync QS Tile -->
+    <string name="quick_settings_sync_label">Eşitleme</string>
+    <string name="accessibility_quick_settings_sync_off">Eşitleme kapalı</string>
+    <string name="accessibility_quick_settings_sync_on">Eşitleme açık</string>
+    <string name="accessibility_quick_settings_sync_changed_off">Eşitleme kapatıldı</string>
+    <string name="accessibility_quick_settings_sync_changed_on">Eşitleme açıldı</string>
+
+    <!-- Expanded desktop QS Tile -->
+    <string name="quick_settings_expanded_desktop_label">Genişletilmiş ekran</string>
+    <string name="quick_settings_expanded_desktop">Genişletilmiş</string>
+    <string name="quick_settings_expanded_desktop_off">Normal</string>
+    <string name="quick_settings_expanded_navigation_off">Gezinme çubuğunu gizle</string>
+    <string name="quick_settings_expanded_statusbar_off">Durum çubuğunu gizle</string>
+
+    <!-- USB tethering QS Tile -->
+    <string name="quick_settings_usb_tether_label">USB internet paylaşımı</string>
+
+    <!-- Location QS Tile -->
+    <string name="accessibility_quick_settings_location_battery_saving">Konum bildirimi: pil tasarruf modu.</string>
+    <string name="accessibility_quick_settings_location_gps_only">Konum bildirimi: yalnızca sensör modu.</string>
+    <string name="accessibility_quick_settings_location_high_accuracy">Konum bildirimi: yüksek doğruluk modu.</string>
+    <string name="quick_settings_location_battery_saving_label">Pil tasarrufu</string>
+    <string name="quick_settings_location_battery_saving_label_twoline">Pil\ntasarrufu</string>
+    <string name="quick_settings_location_gps_only_label">Yalnızca cihaz</string>
+    <string name="quick_settings_location_gps_only_label_twoline">Yalnızca\ncihaz</string>
+    <string name="quick_settings_location_high_accuracy_label">Yüksek doğruluk</string>
+    <string name="quick_settings_location_high_accuracy_label_twoline">Yüksek\ndoğruluk</string>
+    <string name="quick_settings_location_detail_title">Konum</string>
+    <string name="quick_settings_location_detail_menu_title">Mod seç:</string>
+    <string name="quick_settings_location_detail_mode_high_accuracy_title">Yüksek doğruluk</string>
+    <string name="quick_settings_location_detail_mode_battery_saving_title">Pil tasarrufu</string>
+    <string name="quick_settings_location_detail_mode_sensors_only_title">Yalnızca cihaz</string>
+    <string name="quick_settings_location_detail_mode_high_accuracy_description">Konumu belirlemek için GPS, Wi\u2011Fi, Bluetooth veya hücresel ağları kullan</string>
+    <string name="quick_settings_location_detail_mode_battery_saving_description">Konumu belirlemek için Wi\u2011Fi, Bluetooth veya hücresel ağları kullan</string>
+    <string name="quick_settings_location_detail_mode_sensors_only_description">Konum belirlemek için yalnızca GPS kullan</string>
+
+    <!-- Weather QS Tile -->
+    <string name="omnijaws_service_error">Hata</string>
+    <string name="omnijaws_service_unkown">Hava durumu verisi yok</string>
+    <string name="omnijaws_service_error_long">Hava durumu verileri yüklenirken hata oluştu</string>
+    <string name="omnijaws_service_disabled">Servis devre dışı</string>
+    <string name="omnijaws_detail_header">Hava durumu</string>
+    <string name="omnijaws_label_default">Hava durumu</string>
+    <string name="omnijaws_current_text">Şimdi</string>
+    <string name="omnijaws_package_not_available">OmniJaws mevcut değil</string>
+    <string name="omnijaws_service_last_update">Son güncelleme:</string>
+
+    <!-- CPUInfo tile -->
+    <string name="quick_settings_cpuinfo_label">İşlemci bilgisi</string>
+
+    <!-- Battery saver tile -->
+    <string name="battery_saver_qs_tile_fully_charged">Pil tam dolu</string>
+
+    <!-- Data saver icon -->
+    <string name="status_bar_data_saver">Veri tasarrufu</string>
+
+    <!-- Caffeine tile -->
+    <string name="caffeine_info_title">Bu nedir?</string>
+    <string name="caffeine_info_message">Kafein, ekranınızın sürekli açık kalmasını sağlayan bir kısayoldur.\n\nUnutmayın ki kısayolun durumu ekran kapatılmasından sonra sıfırlanacaktır.</string>
+
+  	<!-- Kill button in notification guts -->
+    <string name="force_stop_dlg_title">Zorla durdurulsun mu?</string>
+    <string name="force_stop_dlg_text">Uygulamayı zorla durdurursanız hatalı davranabilir.</string>
+    <string name="kill">Uygulamayı sonladır</string>
+
+    <!-- Always on Display Tile -->
+    <string name="quick_settings_always_on_display_label">Always on ekranı</string>
+    <!-- Content description of the ambient display tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
+    <string name="accessibility_quick_settings_always_on_display_off">Always on ekranı kapalı.</string>
+    <!-- Content description of the ambient display tile in quick settings when on (not shown on the screen). [CHAR LIMIT=NONE] -->
+    <string name="accessibility_quick_settings_always_on_display_on">Always on ekranı açık.</string>
+    <!-- Announcement made when ambient display changes to off (not shown on the screen). [CHAR LIMIT=NONE] -->
+    <string name="accessibility_quick_settings_always_on_display_changed_off">Always on ekranı kapatıldı.</string>
+    <!-- Announcement made when ambient display changes to on (not shown on the screen). [CHAR LIMIT=NONE] -->
+    <string name="accessibility_quick_settings_always_on_display_changed_on">Always on ekranı açıldı.</string>
+
+    <!-- On The Go -->
+    <string name="onthego_notif_ticker">Yürüme modu aktif</string>
+    <string name="onthego_notif_title">Yürüme modu etkin</string>
+    <string name="onthego_notif_stop">Durdur</string>
+    <string name="onthego_notif_options">Seçenekler</string>
+    <string name="onthego_notif_error">Yürüme modu başlatılamıyor</string>
+    <string name="onthego_notif_restart">Yürüme modunu tekrar başlat</string>
+    <string name="onthego_notif_camera_changed">Kamera modu değişti</string>
+    <string name="onthego_transparency">Şeffaflık</string>
+    <string name="onthego_front_camera">Ön kamera kullan</string>
+    <string name="onthego_service_toggle">Servisi otomatik olarak yeniden başlat</string>
+    <string name="onthego_channel_name">Ana</string>
+    <string name="global_action_onthego">Yürüme modu</string>
+
+    <!-- accessibility label for button to open running apps prefscreen [CHAR LIMIT=NONE] -->
+    <string name="accessibility_quick_settings_running_services">Çalışan hizmetler ekranını aç.</string>
+
+    <!-- Assist/Google Tiles -->
+    <string name="quick_settings_google_assist_label">Asistan</string>
+    <string name="quick_settings_google_voice_assist_label">Ses ssistan</string>
+    <string name="quick_settings_google_now_label">Google</string>
+
+    <!-- QS Mini mode -->
+    <string name="qs_show_mini">Mini modu</string>
+    <string name="qs_header">Başlık</string>
+
+    <!-- SmartPixels QS Tile -->
+    <string name="quick_settings_smart_pixels">Smart Pixels</string>
+    <string name="quick_settings_smart_pixels_on_power_save">Auto-enabled Smart Pixels</string>
+
+	  <!-- Music tile -->
+    <string name="quick_settings_music_label">Müzik</string>
+    <string name="quick_settings_music_play">Oynat</string>
+    <string name="quick_settings_music_pause">Duraklat</string>
+
+    <!-- Theme tile -->
+    <string name="systemui_theme_style_title">Stil</string>
+    <string name="systemui_theme_style_auto">Otomatik</string>
+    <string name="systemui_theme_style_light">Aydınlık</string>
+    <string name="systemui_theme_style_dark">Karanlık</string>
+    <string name="systemui_theme_style_black">Siyah</string>
+    <string name="quick_settings_theme_tile_title">Vurgu rengi</string>
+    <string name="quick_settings_theme_tile_accent_detail_title">Renk seç</string>
+    <string name="quick_settings_theme_tile_style_detail_title">Stil seç</string>
+    <string name="quick_settings_theme_tile_color_default">Varsayılan</string>
+    <string name="quick_settings_theme_tile_color_red">Kırmızı</string>
+    <string name="quick_settings_theme_tile_color_pink">Pembe</string>
+    <string name="quick_settings_theme_tile_color_purple">Mor</string>
+    <string name="quick_settings_theme_tile_color_deep_purple">Koyu mor</string>
+    <string name="quick_settings_theme_tile_color_indigo">Indigo</string>
+    <string name="quick_settings_theme_tile_color_blue">Mavi</string>
+    <string name="quick_settings_theme_tile_color_light_blue">Açık mavi</string>
+    <string name="quick_settings_theme_tile_color_cyan">Camgöbeği</string>
+    <string name="quick_settings_theme_tile_color_teal">Yeşilimsi mavi</string>
+    <string name="quick_settings_theme_tile_color_green">Yeşil</string>
+    <string name="quick_settings_theme_tile_color_light_green">Açık yeşil</string>
+    <string name="quick_settings_theme_tile_color_lime">Limon yeşili</string>
+    <string name="quick_settings_theme_tile_color_yellow">Sarı</string>
+    <string name="quick_settings_theme_tile_color_amber">Koyu sarı</string>
+    <string name="quick_settings_theme_tile_color_orange">Turuncu</string>
+    <string name="quick_settings_theme_tile_color_deep_orange">Koyu turuncu</string>
+    <string name="quick_settings_theme_tile_color_brown">Kahverengi</string>
+    <string name="quick_settings_theme_tile_color_grey">Gri</string>
+    <string name="quick_settings_theme_tile_color_blue_grey">Mavi gri</string>
+    <string name="quick_settings_theme_tile_color_black">Siyah</string>
+    <string name="quick_settings_theme_tile_color_white">Beyaz</string>
+    <string name="theme_info_title">Bu nedir?</string>
+    <string name="theme_info_message">Temalar kullanıcı sistem stilini değiştirmesine izin veren benzersiz ama kullanımı kolay bir tema sistemidir.\n\nStil arasında geçiş yapmak için, sadece kareye uzunca bir süre dokunun ve ardından sunulan seçeneklerden seçim yapmak için tekrar dokunun.</string>
+
+</resources>
