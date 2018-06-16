@@ -47,7 +47,6 @@ import android.util.TimeUtils;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * Full information about a particular process that
@@ -174,9 +173,6 @@ final class ProcessRecord {
     final ArrayMap<String, ContentProviderRecord> pubProviders = new ArrayMap<>();
     // All ContentProviderRecord process is using
     final ArrayList<ContentProviderConnection> conProviders = new ArrayList<>();
-
-    String isolatedEntryPoint;  // Class to run on start if this is a special isolated process.
-    String[] isolatedEntryPointArgs; // Arguments to pass to isolatedEntryPoint's main().
 
     boolean execServicesFg;     // do we need to be executing services in the foreground?
     boolean persistent;         // always keep this application running?
@@ -382,11 +378,6 @@ final class ProcessRecord {
         }
         if (whitelistManager) {
             pw.print(prefix); pw.print("whitelistManager="); pw.println(whitelistManager);
-        }
-        if (isolatedEntryPoint != null || isolatedEntryPointArgs != null) {
-            pw.print(prefix); pw.print("isolatedEntryPoint="); pw.println(isolatedEntryPoint);
-            pw.print(prefix); pw.print("isolatedEntryPointArgs=");
-            pw.println(Arrays.toString(isolatedEntryPointArgs));
         }
         if (activities.size() > 0) {
             pw.print(prefix); pw.println("Activities:");
