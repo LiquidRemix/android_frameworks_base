@@ -103,15 +103,22 @@
 
     <!-- Screenrecord -->
     <string name="screenrecord_notif_ticker">Ekran kaydediliyor</string>
+    <string name="screenrecord_notif_final_ticker">Ekran başarıyla kaydedildi</string>
     <string name="screenrecord_notif_title">Ekran kaydediliyor</string>
     <string name="screenrecord_notif_stop">Durdur</string>
+    <string name="screenrecord_notif_completed">Ekran başarıyla kaydedildi</string>
     <string name="screenrecord_notif_pointer_on">İşaretçiyi göster</string>
     <string name="screenrecord_notif_pointer_off">İşaretçiyi gizle</string>
     <string name="screenrecord_notif_error">Ekran kaydedilemiyor</string>
     <string name="notification_channel_screenrecord">Ekran kayıtları</string>
-
+    <string name="screenrecord_hide_hint">İpuçlarını gizle</string>
+    <string name="screenrecord_show_hint">İpuçlarını göster</string>
+	
     <!-- Screenrecord QS Tile -->
-    <string name="quick_settings_screenrecord">Ekran kaydı</string>
+    <string name="quick_settings_screenrecord_label">Ekran kaydı</string>
+    <string name="quick_settings_screenrecord_lq_label">Ekran kaydı 480p</string>
+    <string name="quick_settings_screenrecord_mq_label">Ekran kaydı 720p</string>
+    <string name="quick_settings_screenrecord_hq_label">Ekran kaydı 720p+</string>
 
     <!-- Lock screen shortcut defaults -->
     <string name="lockscreen_default">Varsayılan</string>
@@ -257,8 +264,8 @@
     <string name="qs_header">Başlık</string>
 
     <!-- SmartPixels QS Tile -->
-    <string name="quick_settings_smart_pixels">Smart Pixels</string>
-    <string name="quick_settings_smart_pixels_on_power_save">Auto-enabled Smart Pixels</string>
+    <string name="quick_settings_smart_pixels">Akıllı pikseller</string>
+    <string name="quick_settings_smart_pixels_on_power_save">Otomatik olarak akıllı pikselleri etkinleştir</string>
 
 	  <!-- Music tile -->
     <string name="quick_settings_music_label">Müzik</string>
@@ -266,11 +273,12 @@
     <string name="quick_settings_music_pause">Duraklat</string>
 
     <!-- Theme tile -->
-    <string name="systemui_theme_style_title">Stil</string>
+    <string name="systemui_theme_style_title">Arayüz stili</string>
     <string name="systemui_theme_style_auto">Otomatik</string>
-    <string name="systemui_theme_style_light">Aydınlık</string>
-    <string name="systemui_theme_style_dark">Karanlık</string>
-    <string name="systemui_theme_style_black">Siyah</string>
+    <string name="systemui_theme_style_light">Aydınlık arayüz</string>
+    <string name="systemui_theme_style_dark">Karanlık arayüz</string>
+    <string name="systemui_theme_style_black">Siyah arayüz</string>
+    <string name="systemui_theme_style_extended">Extended arayüz</string>
     <string name="quick_settings_theme_tile_title">Vurgu rengi</string>
     <string name="quick_settings_theme_tile_accent_detail_title">Renk seç</string>
     <string name="quick_settings_theme_tile_style_detail_title">Stil seç</string>
@@ -296,7 +304,32 @@
     <string name="quick_settings_theme_tile_color_blue_grey">Mavi gri</string>
     <string name="quick_settings_theme_tile_color_black">Siyah</string>
     <string name="quick_settings_theme_tile_color_white">Beyaz</string>
+    <string name="quick_settings_theme_tile_color_candy_red">Şeker kırmızısı</string>
+    <string name="quick_settings_theme_tile_color_pale_red">Soluk kırmızı</string>
+    <string name="quick_settings_theme_tile_color_extended_green">Genişletilmiş yeşil</string>
+    <string name="quick_settings_theme_tile_color_pale_blue">Soluk mavi</string>
+    <string name="quick_settings_theme_tile_color_jade_green">Yeşim yeşili</string>
     <string name="theme_info_title">Bu nedir?</string>
     <string name="theme_info_message">Temalar kullanıcı sistem stilini değiştirmesine izin veren benzersiz ama kullanımı kolay bir tema sistemidir.\n\nStil arasında geçiş yapmak için, sadece kareye uzunca bir süre dokunun ve ardından sunulan seçeneklerden seçim yapmak için tekrar dokunun.</string>
+
+    <!-- Screenshot delete toast -->
+    <string name="delete_screenshot_toast">Ekran görüntüsü silindi</string>
+
+    <!-- Recents app killed -->
+    <string name="recents_app_killed">Uygulama sonlandırıldı</string>
+
+    <!-- Recents app warnings -->
+    <string name="recents_locked_app_kill_warning">Uygulama kilitlendi. Zorla durdurma reddetildi.</string>
+    <string name="recents_kill_error_warning">Bu uygulama durmaya zorlanmaz. İşlem iptal edildi.</string>
+
+    <!-- Immersive QS Tile -->
+    <string name="quick_settings_immersive_tile">Genişletilmiş mod</string>
+    <string name="quick_settings_immersive_tile_off">Genişletilmiş mod kapalı</string>
+    <string name="quick_settings_immersive_tile_statusbar">Genişletilmiş mod durum çubuğu</string>
+    <string name="quick_settings_immersive_tile_navbar">Genişletilmiş mod gezinme tuşu</string>
+    <string name="quick_settings_immersive_tile_full">Genişletilmiş mod tam ekran</string>
+
+    <!-- Sound search QS Tile -->
+    <string name="quick_settings_sound_search">Sesli arama</string>
 
 </resources>
