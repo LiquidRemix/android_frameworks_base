@@ -54,9 +54,9 @@ public class RoundedCorners extends SystemUI implements Tunable {
     private View mOverlay;
     private View mBottomOverlay;
     private float mDensity;
-    /*private TunablePadding mQsPadding;
+    private TunablePadding mQsPadding;
     private TunablePadding mStatusBarPadding;
-    private TunablePadding mNavBarPadding;*/
+    private TunablePadding mNavBarPadding;
 
     @Override
     public void start() {
