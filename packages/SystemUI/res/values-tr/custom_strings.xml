@@ -343,4 +343,18 @@
     <!-- High Brightness Mode Tile -->
     <string name="quick_settings_high_brightness">Yüksek parlaklık</string>
 
+    <!-- App circle sidebar -->
+    <string name="app_float_maximize_item_title">Maksimuma çıkarma</string>
+    <string name="app_float_item_title">Float görünümü</string>
+    <string name="app_stop_item_title">Uygulamayı sonlandır</string>
+
+    <!-- Gaming Mode -->
+    <string name="gaming_mode_tile_title">Oyun modu</string>
+    <string name="gaming_mode_tile_toast">Oyun modu etkin</string>
+    <string name="gaming_mode_tile_toast_disabled">Oyun modu devre dışı</string>
+    <string name="gaming_mode_dialog_title">Oyun modu</string>
+    <string name="gaming_mode_dialog_message">Oyun modu etkinleştirildiğinde zil modunuz titreşim moduna geçer, tüm uyarı mesajları devre dışı bırakılır ve donanım tuşları kapatılır. Medya sesi maksimum değere yükseltilecektir. Oyun modundan çıktığınızda tüm engellenen ayarlar varsayılana sıfırlanacaktır.</string>
+    <string name="accessibility_quick_settings_gaming_mode_on">Oyun modu açık</string>
+    <string name="accessibility_quick_settings_gaming_mode_off">Oyun modu kapalı</string>
+
 </resources>
