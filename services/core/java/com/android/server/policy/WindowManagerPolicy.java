@@ -1582,6 +1582,7 @@ public interface WindowManagerPolicy extends WindowManagerPolicyConstants {
      * Specifies whether there is an on-screen navigation bar separate from the status bar.
      */
     public boolean hasNavigationBar();
+    public boolean hasPermanentMenuKey();
 
     /**
      * Send some ActionHandler commands to WindowManager.
@@ -1803,4 +1804,9 @@ public interface WindowManagerPolicy extends WindowManagerPolicyConstants {
      * @return true if enable; false otherwise.
      */
     boolean isGestureButtonRegion(int i, int i2);
+
+    /**
+     * Call screen record from WindowManager.
+     */
+    void screenRecordAction(int mode);
 }

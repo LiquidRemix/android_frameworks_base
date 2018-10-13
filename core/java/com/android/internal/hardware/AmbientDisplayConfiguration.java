@@ -33,16 +33,16 @@ public class AmbientDisplayConfiguration {
     }
 
     public boolean enabled(int user) {
-        return pulseOnNotificationEnabled(user)
+        return isDozeEnabled() && (pulseOnNotificationEnabled(user)
                 || pulseOnPickupEnabled(user)
                 || pulseOnDoubleTapEnabled(user)
                 || pulseOnLongPressEnabled(user)
-                || alwaysOnEnabled(user);
+                || alwaysOnEnabled(user));
     }
 
     public boolean available() {
-        return pulseOnNotificationAvailable() || pulseOnPickupAvailable()
-                || pulseOnDoubleTapAvailable();
+        return isDozeEnabled() && (pulseOnNotificationAvailable() || pulseOnPickupAvailable()
+                || pulseOnDoubleTapAvailable());
     }
 
     public boolean pulseOnNotificationEnabled(int user) {
@@ -50,7 +50,7 @@ public class AmbientDisplayConfiguration {
     }
 
     public boolean pulseOnNotificationAvailable() {
-        return ambientDisplayAvailable();
+        return ambientDisplayAvailable() && isDozeEnabled();
     }
 
     public boolean pulseOnPickupEnabled(int user) {
@@ -103,6 +103,13 @@ public class AmbientDisplayConfiguration {
     public boolean alwaysOnEnabled(int user) {
         return boolSettingDefaultOff(Settings.Secure.DOZE_ALWAYS_ON, user) && alwaysOnAvailable()
                 && !accessibilityInversionEnabled(user);
+    }
+
+    public boolean isDozeEnabled() {
+        final boolean dozeEnabledDefault = true;
+        final boolean dozeEnabled = Settings.Secure.getInt(mContext.getContentResolver(),
+                Settings.Secure.DOZE_ENABLED, dozeEnabledDefault ? 1 : 0) != 0;
+        return dozeEnabled;
     }
 
     public boolean alwaysOnAvailable() {

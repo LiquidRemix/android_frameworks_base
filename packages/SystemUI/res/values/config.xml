@@ -123,7 +123,7 @@
 
     <!-- Tiles native to System UI. Order should match "quick_settings_tiles_default" -->
     <string name="quick_settings_tiles_stock" translatable="false">
-        wifi,cell,battery,dnd,flashlight,rotation,bt,airplane,nfc,location,hotspot,inversion,saver,work,cast,night,lte,sound,aod,caffeine,reboot,screenshot,heads_up,usb_tether,sync,hwkeys,screenstabilization,expanded_desktop,gaming
+        wifi,cell,battery,dnd,flashlight,rotation,bt,airplane,nfc,location,hotspot,inversion,saver,work,cast,night,lte,sound,aod,caffeine,reboot,screenshot,heads_up,usb_tether,sync,hwkeys,screenstabilization,expanded_desktop,gaming,weather,ambient_display,screenrecord,adb_network,alarm,calc,cpuinfo,calendar,call,camera,compass,liquid,navbar,onthego,sleepscreen,smartpixels,volume_panel
     </string>
 
     <!-- The tiles to display in QuickSettings -->
@@ -477,6 +477,9 @@
         <item>30</item>
         <item>60</item>
         <item>120</item>
+	<item>300</item>
+	<item>720</item>
+	<item>1440</item>
     </integer-array>
 
     <!-- Smart replies in notifications: Whether smart replies in notifications are enabled. -->
@@ -496,4 +499,12 @@
 
     <!-- On debuggable builds, alert the user if SystemUI PSS goes over this number (in kb) -->
     <integer name="watch_heap_limit">256000</integer>
+
+    <!-- On-The-Go -->
+    <integer name="quick_settings_onthego_dialog_short_timeout">3000</integer>
+    <integer name="quick_settings_onthego_dialog_long_timeout">6000</integer>
+
+    <!-- CPUInfoService temperature sysfs path -->
+    <string name="config_cpuinfoSysTemp" translatable="false"></string>
+
 </resources>

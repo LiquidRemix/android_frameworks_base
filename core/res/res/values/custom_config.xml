@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-     Copyright (C) 2017 Benzo Rom
+<!-- Copyright (C) 2018 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,7 +13,7 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<resources>
 
     <!-- The list of components which should be automatically disabled. -->
     <string-array name="config_disabledComponents" translatable="false">
@@ -48,6 +47,9 @@
     <!-- Full screen aspect ratio -->
     <bool name="config_haveHigherAspectRatioScreen">false</bool>
     <item name="config_screenAspectRatio" format="float" type="dimen">2.1</item>
+
+    <!-- Setting to false will disable CM's IME switcher implementation for tablets -->
+    <bool name="config_show_cmIMESwitcher">true</bool>
 
     <!-- Hardware keys present on the device, stored as a bit field.
          This integer should equal the sum of the corresponding value for each
@@ -94,4 +96,82 @@
 
     <!-- Whether the device supports Smart Pixels -->
     <bool name="config_enableSmartPixels">false</bool>
+
+    <!-- In call notification vibration strength -->
+    <integer name="config_in_call_notification_vibration_strength">30</integer>
+
+    <!-- Any package that has one of the package names defined below will be prevented 
+         from using specific sensors in order to stop battery drain --> 
+    <string-array name="config_blockPackagesSensorDrain"> 
+        <item>com.whatsapp</item>   
+        <item>com.gbwhatsapp</item>   
+        <item>com.yowhatsapp</item>   
+        <item>com.whatsapp.plus</item>   
+        <item>org.telegram.messenger</item>   
+        <item>org.telegram.messenger.plus</item>  
+        <item>com.netease.cloudmusic</item>   
+        <item>fm.xiami.main</item>   
+        <item>com.tencent.weread</item>   
+        <item>com.netease.snailread</item>   
+        <item>com.tencent.mm</item>   
+        <item>com.baidu.browser.apps</item>   
+        <item>com.tencent.tim</item>   
+        <item>org.thunderdog.challegram</item> 
+        <item>com.snapchat.android</item>   
+        <item>com.facebook.orca</item>   
+        <item>com.Slack</item>   
+        <item>tugapower.codeaurora.browser</item>   
+        <item>org.mozilla.firefox</item>   
+        <item>com.android.chrome</item>   
+        <item>com.amazon.mShop.android.shopping</item>   
+        <item>com.google.android.inputmethod.latin</item>   
+        <item>com.google.android.apps.plus</item>   
+        <item>com.google.android.apps.maps</item>   
+        <item>ru.ok.android</item>   
+        <item>com.instagram.android.MainTabActivity</item>  
+        <item>com.facebook.orca.StartScreenActivity</item> 
+        <item>com.spotify.music</item> 
+        <item>com.spotify.music.MainActivity</item>
+        <item>com.android.vending</item>   
+        <item>com.trtf.blue</item>   
+        <item>com.facebook.katana.LoginActivity</item> 
+        <item>com.android.AssetBrowserActivity</item>
+        <item>com.bsb.hike</item>
+        <item>com.csam.icici.bank.imobile</item>
+        <item>com.facebook.katana</item>
+        <item>com.facebook.lite</item>
+        <item>com.google.android.gms</item>
+        <item>com.google.android.gms.setup</item>
+        <item>com.instagram.android</item>
+        <item>com.linkedin.android</item>
+        <item>com.snapchat.android.LandingPageActivity</item>
+        <item>com.spotify</item>
+        <item>com.spotify.music.Spotify</item>
+        <item>com.whatsapp.Main</item>
+        <item>com.whatsapp.Whatsapp</item>
+        <item>org.telegram.messenger.Telegram</item>
+    </string-array>
+
+    <!-- Flag indicating whether strict threshold is used, or lenient threshold is used,
+          when evaluating RSRP for LTE antenna bar display
+           0. Strict threshold
+           1. Lenient threshold
+    -->
+    <integer name="config_LTE_antenna_bar_quantity_metric">0</integer>
+    <integer name="config_LTE_RSRP_threshold_type">0</integer>
+
+    <!-- display for radio tech -->
+    <bool name="config_display_rat">true</bool>
+    <!-- config 2G/3G/4G RAT strings for carriers -->
+    <string name="config_rat_unknown" translatable="false">""</string>
+    <string name="config_rat_2g" translatable="false">2G</string>
+    <string name="config_rat_3g" translatable="false">3G</string>
+    <string name="config_rat_4g" translatable="false">4G</string>
+
+    <!-- Whether doze feature is enabled by default in settings. -->
+    <bool name="config_doze_enabled_by_default">false</bool>
+
+    <!-- If this is true, key chords can be used to take a screen record on the device. -->
+    <bool name="config_enableScreenrecordChord">true</bool>
+
 </resources>

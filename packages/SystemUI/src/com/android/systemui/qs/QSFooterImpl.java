@@ -28,12 +28,15 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
 import android.os.UserManager;
+import android.os.Vibrator;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -61,14 +64,20 @@ import com.android.systemui.statusbar.policy.NetworkController.SignalCallback;
 import com.android.systemui.statusbar.policy.UserInfoController;
 import com.android.systemui.statusbar.policy.UserInfoController.OnUserInfoChangedListener;
 import com.android.systemui.tuner.TunerService;
+import com.android.systemui.tuner.TunerService.Tunable;
 
-public class QSFooterImpl extends FrameLayout implements QSFooter,
-        OnClickListener, OnUserInfoChangedListener, EmergencyListener, SignalCallback {
+public class QSFooterImpl extends FrameLayout implements Tunable, QSFooter,
+        OnClickListener,  OnLongClickListener, OnUserInfoChangedListener,
+        EmergencyListener, SignalCallback {
+
+    private static final String QS_FOOTER_SHOW_SETTINGS = "qs_footer_show_settings";
+    private static final String QS_FOOTER_SHOW_SERVICES = "qs_footer_show_services";
 
     private ActivityStarter mActivityStarter;
     private UserInfoController mUserInfoController;
     private SettingsButton mSettingsButton;
     protected View mSettingsContainer;
+    private View mRunningServicesButton;
     private PageIndicator mPageIndicator;
     private CarrierText mCarrierText;
 
@@ -99,6 +108,7 @@ public class QSFooterImpl extends FrameLayout implements QSFooter,
     private final int mColorForeground;
     private final CellSignalState mInfo = new CellSignalState();
     private OnClickListener mExpandClickListener;
+    protected Vibrator mVibrator;
 
     public QSFooterImpl(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -119,6 +129,10 @@ public class QSFooterImpl extends FrameLayout implements QSFooter,
         mSettingsButton = findViewById(R.id.settings_button);
         mSettingsContainer = findViewById(R.id.settings_button_container);
         mSettingsButton.setOnClickListener(this);
+        mSettingsButton.setOnLongClickListener(this);
+
+        mRunningServicesButton = findViewById(R.id.running_services_button);
+        mRunningServicesButton.setOnClickListener(this);
 
         mMobileGroup = findViewById(R.id.mobile_combo);
         mMobileSignal = findViewById(R.id.mobile_signal);
@@ -132,10 +146,14 @@ public class QSFooterImpl extends FrameLayout implements QSFooter,
 
         mDragHandle = findViewById(R.id.qs_drag_handle_view);
         mActionsContainer = findViewById(R.id.qs_footer_actions_container);
+        mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+
+        updateVisibilities();
 
         // RenderThread is doing more harm than good when touching the header (to expand quick
         // settings), so disable it for this view
         ((RippleDrawable) mSettingsButton.getBackground()).setForceSoftware(true);
+        ((RippleDrawable) mRunningServicesButton.getBackground()).setForceSoftware(true);
 
         updateResources();
 
@@ -144,6 +162,17 @@ public class QSFooterImpl extends FrameLayout implements QSFooter,
         addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight,
                 oldBottom) -> updateAnimator(right - left));
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        Dependency.get(TunerService.class).addTunable(this, QS_FOOTER_SHOW_SETTINGS);
+        Dependency.get(TunerService.class).addTunable(this, QS_FOOTER_SHOW_SERVICES);
+    }
+
+    public void onTuningChanged(String key, String newValue) {
+        updateVisibilities();
     }
 
     private void updateAnimator(int width) {
@@ -160,6 +189,12 @@ public class QSFooterImpl extends FrameLayout implements QSFooter,
                 .build();
 
         setExpansion(mExpansionAmount);
+    }
+
+    public void vibrateheader(int duration) {
+        if (mVibrator != null) {
+            if (mVibrator.hasVibrator()) { mVibrator.vibrate(duration); }
+        }
     }
 
     @Override
@@ -199,6 +234,7 @@ public class QSFooterImpl extends FrameLayout implements QSFooter,
                 .addFloat(mActionsContainer, "alpha", 0, 1)
                 .addFloat(mDragHandle, "alpha", 1, 0, 0)
                 .addFloat(mPageIndicator, "alpha", 0, 1)
+                .addFloat(mRunningServicesButton, "alpha", 0, 1)
                 .setStartDelay(0.15f)
                 .build();
     }
@@ -234,6 +270,7 @@ public class QSFooterImpl extends FrameLayout implements QSFooter,
     @VisibleForTesting
     public void onDetachedFromWindow() {
         setListening(false);
+        Dependency.get(TunerService.class).removeTunable(this);
         super.onDetachedFromWindow();
     }
 
@@ -281,9 +318,15 @@ public class QSFooterImpl extends FrameLayout implements QSFooter,
     private void updateVisibilities() {
         mSettingsContainer.setVisibility(mQsDisabled ? View.GONE : View.VISIBLE);
         final boolean isDemo = UserManager.isDeviceInDemoMode(mContext);
+        boolean servicesButtonVisible = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.QSFOOTER_SHOW_SERVICES, 0) != 0;
+        boolean settingsButtonVisible = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.QSFOOTER_SHOW_SETTINGS, 1) != 0;
         mMultiUserSwitch.setVisibility(showUserSwitcher(isDemo) ? View.VISIBLE : View.INVISIBLE);
         mEdit.setVisibility(isDemo || !mExpanded ? View.INVISIBLE : View.VISIBLE);
-        mSettingsButton.setVisibility(isDemo || !mExpanded ? View.INVISIBLE : View.VISIBLE);
+        mSettingsButton.setVisibility(isDemo || settingsButtonVisible ? View.VISIBLE : View.GONE);
+        mRunningServicesButton.setVisibility(!isDemo && mExpanded ? View.VISIBLE : View.INVISIBLE);
+        mRunningServicesButton.setVisibility(servicesButtonVisible ? (!isDemo && mExpanded ? View.VISIBLE : View.INVISIBLE) : View.GONE);
     }
 
     private boolean showUserSwitcher(boolean isDemo) {
@@ -347,12 +390,39 @@ public class QSFooterImpl extends FrameLayout implements QSFooter,
                     mExpanded ? MetricsProto.MetricsEvent.ACTION_QS_EXPANDED_SETTINGS_LAUNCH
                             : MetricsProto.MetricsEvent.ACTION_QS_COLLAPSED_SETTINGS_LAUNCH);
             startSettingsActivity();
+        } else if (v == mRunningServicesButton) {
+            MetricsLogger.action(mContext,
+                    mExpanded ? MetricsProto.MetricsEvent.ACTION_QS_EXPANDED_SETTINGS_LAUNCH
+                            : MetricsProto.MetricsEvent.ACTION_QS_COLLAPSED_SETTINGS_LAUNCH);
+            startRunningServicesActivity();
         }
+    }
+
+    public boolean onLongClick(View v) {
+        if (v == mSettingsButton) {
+            startLiquidSettingsActivity();
+            vibrateheader(20);
+        }
+        return false;
+    }
+
+    private void startRunningServicesActivity() {
+        Intent intent = new Intent();
+        intent.setClassName("com.android.settings",
+                "com.android.settings.Settings$DevRunningServicesActivity");
+        mActivityStarter.startActivity(intent, true /* dismissShade */);
     }
 
     private void startSettingsActivity() {
         mActivityStarter.startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS),
                 true /* dismissShade */);
+    }
+
+    private void startLiquidSettingsActivity() {
+        Intent nIntent = new Intent(Intent.ACTION_MAIN);
+        nIntent.setClassName("com.android.settings",
+            "com.android.settings.Settings$LiquidLoungeSettingsActivity");
+        mActivityStarter.startActivity(nIntent, true /* dismissShade */);
     }
 
     @Override

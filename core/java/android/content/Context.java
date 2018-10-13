@@ -4076,6 +4076,17 @@ public abstract class Context {
     public static final String MEDIA_PROJECTION_SERVICE = "media_projection";
 
     /**
+     * Use with {@link #getSystemService} to retrieve a
+     * com.android.internal.mirrorpowersave.LcdPowerSaveManager instance
+     * for save the local LCD power consumption while mirroring
+     * to the external display.
+     *
+     * @see #getSystemService
+     * @hide
+     */
+    public static final String LCD_POWER_SAVE_SERVICE = "mirror_power_save";
+
+    /**
      * Use with {@link #getSystemService(String)} to retrieve a
      * {@link android.media.midi.MidiManager} for accessing the MIDI service.
      *
@@ -4190,6 +4201,16 @@ public abstract class Context {
      * @see #getSystemService(String)
      */
     public static final String TIME_ZONE_RULES_MANAGER_SERVICE = "timezone";
+
+    /**
+     * Use with {@link #getSystemService} to retrieve a
+     * {@link android.os.PocketManager} for accessing and listening to device pocket state.
+     *
+     * @hide
+     * @see #getSystemService
+     * @see android.os.PocketManager
+     */
+    public static final String POCKET_SERVICE = "pocket";
 
     /**
      * Use with {@link #getSystemService(String)} to retrieve a

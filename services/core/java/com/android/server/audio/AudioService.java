@@ -44,6 +44,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothHearingAid;
 import android.bluetooth.BluetoothProfile;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -820,6 +821,9 @@ public class AudioService extends IAudioService.Stub
         readPersistedSettings();
         readUserRestrictions();
         mSettingsObserver = new SettingsObserver();
+
+        // Update volumes steps before creatingStreamStates!
+        initVolumeSteps();
         createStreamStates();
 
         // mSafeUsbMediaVolumeIndex must be initialized after createStreamStates() because it
@@ -1078,6 +1082,60 @@ public class AudioService extends IAudioService.Stub
                 }
             }
         }
+    }
+
+    private void initVolumeSteps() {
+        // Defaults for reference
+        // 5, // STREAM_VOICE_CALL
+        // 7, // STREAM_SYSTEM
+        // 7, // STREAM_RING
+        // 15, // STREAM_MUSIC
+        // 7, // STREAM_ALARM
+        // 7, // STREAM_NOTIFICATION
+        // 15, // STREAM_BLUETOOTH_SCO
+        // 7, // STREAM_SYSTEM_ENFORCED
+        // 15, // STREAM_DTMF
+        // 15 // STREAM_TTS
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_VOICE_CALL] =
+                Settings.System.getInt(mContentResolver, "volume_steps_voice_call",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_VOICE_CALL]);
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_SYSTEM] =
+                Settings.System.getInt(mContentResolver, "volume_steps_system",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_SYSTEM]);
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_RING] =
+                Settings.System.getInt(mContentResolver, "volume_steps_ring",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_RING]);
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_MUSIC] =
+                Settings.System.getInt(mContentResolver, "volume_steps_music",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_MUSIC]);
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_ALARM] =
+                Settings.System.getInt(mContentResolver, "volume_steps_alarm",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_ALARM]);
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_NOTIFICATION] =
+                Settings.System.getInt(mContentResolver, "volume_steps_notification",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_NOTIFICATION]);
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_BLUETOOTH_SCO] =
+                Settings.System.getInt(mContentResolver, "volume_steps_bluetooth_sco",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_BLUETOOTH_SCO]);
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_SYSTEM_ENFORCED] =
+                Settings.System.getInt(mContentResolver, "volume_steps_system_enforced",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_SYSTEM_ENFORCED]);
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_DTMF] =
+                Settings.System.getInt(mContentResolver, "volume_steps_dtmf",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_DTMF]);
+
+        MAX_STREAM_VOLUME[AudioSystem.STREAM_TTS] =
+                Settings.System.getInt(mContentResolver, "volume_steps_tts",
+                        MAX_STREAM_VOLUME[AudioSystem.STREAM_TTS]);
     }
 
     private void createAudioSystemThread() {
@@ -2400,6 +2458,10 @@ public class AudioService extends IAudioService.Stub
                 userId);
     }
 
+    protected static void setMaxStreamVolume(int streamType, int maxVol) {
+        MAX_STREAM_VOLUME[streamType] = maxVol;
+    }
+
     /** @see AudioManager#getStreamVolume(int) */
     public int getStreamVolume(int streamType) {
         ensureValidStreamType(streamType);
@@ -2423,6 +2485,13 @@ public class AudioService extends IAudioService.Stub
     public int getStreamMaxVolume(int streamType) {
         ensureValidStreamType(streamType);
         return (mStreamStates[streamType].getMaxIndex() + 5) / 10;
+    }
+
+    /** @see AudioManager#setStreamMaxVolume(int,int) */
+    public void setStreamMaxVolume(int streamType, int maxVol) {
+        ensureValidStreamType(streamType);
+        mStreamStates[streamType].setMaxIndex(maxVol);
+        setMaxStreamVolume(streamType, maxVol);
     }
 
     /** @see AudioManager#getStreamMinVolumeInt(int) */
@@ -3254,7 +3323,10 @@ public class AudioService extends IAudioService.Stub
 
         // Only enable calls from system components
         if (Binder.getCallingUid() >= FIRST_APPLICATION_UID) {
-            mForcedUseForCommExt = on ? AudioSystem.FORCE_BT_SCO : AudioSystem.FORCE_NONE;
+            if (on)
+                mForcedUseForCommExt = AudioSystem.FORCE_BT_SCO;
+            else if (mForcedUseForCommExt == AudioSystem.FORCE_BT_SCO)
+                mForcedUseForCommExt = AudioSystem.FORCE_NONE;
             return;
         }
 
@@ -5043,6 +5115,16 @@ public class AudioService extends IAudioService.Stub
             return mIndexMax;
         }
 
+        public void setMaxIndex(int maxVol) {
+            mIndexMax = maxVol;
+            AudioSystem.initStreamVolume(mStreamType, 0, mIndexMax);
+            mIndexMax = maxVol;
+            mIndexMax *= 10;
+            // Volume steps changed, fire the intent.
+            Intent intent = new Intent(AudioManager.VOLUME_STEPS_CHANGED_ACTION);
+            sendBroadcastToAll(intent);
+        }
+
         public int getMinIndex() {
             return mIndexMin;
         }
@@ -6225,9 +6307,15 @@ public class AudioService extends IAudioService.Stub
 
         if (device == AudioSystem.DEVICE_OUT_WIRED_HEADSET) {
             connType = AudioRoutesInfo.MAIN_HEADSET;
+            if (state == 1) {
+                startMusicPlayer();
+            }
         } else if (device == AudioSystem.DEVICE_OUT_WIRED_HEADPHONE ||
                    device == AudioSystem.DEVICE_OUT_LINE) {
             connType = AudioRoutesInfo.MAIN_HEADPHONES;
+            if (state == 1) {
+                startMusicPlayer();
+            }
         } else if (device == AudioSystem.DEVICE_OUT_HDMI ||
                 device == AudioSystem.DEVICE_OUT_HDMI_ARC) {
             connType = AudioRoutesInfo.MAIN_HDMI;
@@ -6303,6 +6391,23 @@ public class AudioService extends IAudioService.Stub
             ActivityManager.broadcastStickyIntent(intent, UserHandle.USER_ALL);
         } finally {
             Binder.restoreCallingIdentity(ident);
+        }
+    }
+
+    private void startMusicPlayer() {
+        boolean launchPlayer = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.HEADSET_CONNECT_PLAYER, 0, UserHandle.USER_CURRENT) != 0;
+        TelecomManager tm = (TelecomManager) mContext.getSystemService(Context.TELECOM_SERVICE);
+
+        if (launchPlayer && !tm.isInCall()) {
+            try {
+                Intent playerIntent = new Intent(Intent.ACTION_MAIN);
+                playerIntent.addCategory(Intent.CATEGORY_APP_MUSIC);
+                playerIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mContext.startActivity(playerIntent);
+            } catch (ActivityNotFoundException | IllegalArgumentException e) {
+                Log.w(TAG, "No music player Activity could be found");
+            }
         }
     }
 

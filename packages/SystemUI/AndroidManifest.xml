@@ -34,6 +34,8 @@
     <uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <uses-permission android:name="android.permission.ACCESS_SURFACE_FLINGER" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INJECT_EVENTS" />
     <uses-permission android:name="android.permission.DUMP" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
@@ -216,6 +218,9 @@
 
     <uses-permission android:name="android.permission.HIDE_NON_SYSTEM_OVERLAY_WINDOWS" />
 
+    <!-- OmniJaws -->
+    <uses-permission android:name="org.omnirom.omnijaws.READ_WEATHER" />
+
     <protected-broadcast android:name="com.android.settingslib.action.REGISTER_SLICE_RECEIVER" />
     <protected-broadcast android:name="com.android.settingslib.action.UNREGISTER_SLICE_RECEIVER" />
     <uses-permission android:name="android.permission.ACCESS_SURFACE_FLINGER" />
@@ -239,6 +244,13 @@
     <!-- Ambient Indication -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+    <!-- Visualizer -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- screenrecord -->
+    <uses-permission android:name="android.permission.ACCESS_SURFACE_FLINGER" />
 
     <application
         android:name=".SystemUIApplication"
@@ -290,6 +302,12 @@
             </intent-filter>
         </receiver>
 
+        <!-- started from PhoneWindowManager
+             TODO: Should have an android:permission attribute -->
+        <service android:name=".liquid.onthego.OnTheGoService"
+            android:process=":onthego"
+            android:exported="false" />
+
         <receiver android:name=".SysuiRestartReceiver"
             android:exported="false">
             <intent-filter>
@@ -298,6 +316,12 @@
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>
+
+        <!-- started from PhoneWindowManager
+             TODO: Should have an android:permission attribute -->
+        <service android:name=".liquid.screenrecord.TakeScreenrecordService"
+            android:process=":screenrecord"
+            android:exported="false" />
 
         <service android:name=".ImageWallpaper"
                 android:permission="android.permission.BIND_WALLPAPER"
@@ -398,6 +422,21 @@
         <!-- Callback for deleting screenshot notification -->
         <receiver android:name=".screenshot.GlobalScreenshot$DeleteScreenshotReceiver"
             android:process=":screenshot"
+            android:exported="false" />
+
+        <!-- Springboard for launching the share activity -->
+        <receiver android:name=".liquid.screenrecord.GlobalScreenrecord$ShareReceiver"
+            android:process=":screenrecord"
+            android:exported="false" />
+
+        <!-- Callback for dismissing screenrecord notification after a share target is picked -->
+        <receiver android:name=".liquid.screenrecord.GlobalScreenrecord$TargetChosenReceiver"
+            android:process=":screenrecord"
+            android:exported="false" />
+
+        <!-- Callback for deleting screenrecord notification -->
+        <receiver android:name=".liquid.screenrecord.GlobalScreenrecord$DeleteScreenrecordReceiver"
+            android:process=":screenrecord"
             android:exported="false" />
 
         <!-- started from UsbDeviceSettingsManager -->

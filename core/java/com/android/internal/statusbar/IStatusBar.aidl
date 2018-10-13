@@ -60,10 +60,6 @@ oneway interface IStatusBar
 
     void showRecentApps(boolean triggeredFromAltTab);
     void hideRecentApps(boolean triggeredFromAltTab, boolean triggeredFromHomeKey);
-    void toggleRecentApps();
-    void toggleSplitScreen();
-    void preloadRecentApps();
-    void cancelPreloadRecentApps();
     void showScreenPinningRequest(int taskId);
 
     void dismissKeyboardShortcutsMenu();
@@ -96,7 +92,6 @@ oneway interface IStatusBar
     void appTransitionFinished();
 
     void showAssistDisclosure();
-    void startAssist(in Bundle args);
 
     /**
      * Notifies the status bar that a camera launch gesture has been detected.
@@ -151,5 +146,15 @@ oneway interface IStatusBar
     // Used to hide the fingerprint dialog when the authenticationclient is stopped
     void hideFingerprintDialog();
 
+    /**
+     * LIQUID
+     */
     void toggleCameraFlash();
+    void setAutoRotate(boolean enabled);
+    void toggleRecentApps();
+    void toggleSplitScreen();
+    void preloadRecentApps();
+    void cancelPreloadRecentApps();
+    void startAssist(in Bundle args);
+    void restartUI();
 }

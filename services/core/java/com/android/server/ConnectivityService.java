@@ -106,6 +106,7 @@ import android.os.ServiceSpecificException;
 import android.os.ShellCallback;
 import android.os.ShellCommand;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.Settings;
@@ -203,7 +204,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
     public static final String SHORT_ARG = "--short";
     public static final String TETHERING_ARG = "tethering";
 
-    private static final boolean DBG = true;
+    private static final boolean DBG = false;
     private static final boolean VDBG = false;
 
     private static final boolean LOGD_RULES = false;
@@ -916,6 +917,10 @@ public class ConnectivityService extends IConnectivityManager.Stub
 
         mDnsManager = new DnsManager(mContext, mNetd, mSystemProperties);
         registerPrivateDnsSettingsCallbacks();
+
+        String hostname = Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.DEVICE_HOSTNAME);
+        SystemProperties.set("net.hostname", hostname);
     }
 
     private Tethering makeTethering() {
@@ -1628,7 +1633,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
         @Override
         public void onRestrictBackgroundChanged(boolean restrictBackground) {
             // TODO: relocate this specific callback in Tethering.
-            if (restrictBackground) {
+            if (restrictBackground && isTetheringSupported()) {
                 log("onRestrictBackgroundChanged(true): disabling tethering");
                 mTethering.untetherAll();
             }
@@ -1883,6 +1888,19 @@ public class ConnectivityService extends IConnectivityManager.Stub
             } catch (Exception e) {
                 loge("Exception in removeDataActivityTracking " + e);
             }
+        }
+    }
+
+    /**
+     * Update data activity tracking when network state is updated.
+     */
+    private void updateDataActivityTracking(NetworkAgentInfo newNetwork,
+            NetworkAgentInfo oldNetwork) {
+        if (newNetwork != null) {
+            setupDataActivityTracking(newNetwork);
+        }
+        if (oldNetwork != null) {
+            removeDataActivityTracking(oldNetwork);
         }
     }
 
@@ -2512,7 +2530,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
         }
         nai.clearLingerState();
         if (nai.isSatisfyingRequest(mDefaultRequest.requestId)) {
-            removeDataActivityTracking(nai);
+            updateDataActivityTracking(null /*new Network*/, nai);
             notifyLockdownVpn(nai);
             ensureNetworkTransitionWakelock(nai.name());
         }
@@ -5169,7 +5187,6 @@ public class ConnectivityService extends IConnectivityManager.Stub
 
     private void makeDefault(NetworkAgentInfo newNetwork) {
         if (DBG) log("Switching to new default network: " + newNetwork);
-        setupDataActivityTracking(newNetwork);
         try {
             mNetd.setDefaultNetId(newNetwork.network.netId);
         } catch (Exception e) {
@@ -5344,6 +5361,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
             }
         }
         if (isNewDefault) {
+            updateDataActivityTracking(newNetwork, oldDefaultNetwork);
             // Notify system services that this network is up.
             makeDefault(newNetwork);
             // Log 0 -> X and Y -> X default network transitions, where X is the new default.

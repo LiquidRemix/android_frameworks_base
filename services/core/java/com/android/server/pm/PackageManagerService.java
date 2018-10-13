@@ -1614,9 +1614,11 @@ public class PackageManagerService extends IPackageManager.Stub
                 }
                 case MCS_GIVE_UP: {
                     if (DEBUG_INSTALL) Slog.i(TAG, "mcs_giveup too many retries");
-                    HandlerParams params = mPendingInstalls.remove(0);
-                    Trace.asyncTraceEnd(TRACE_TAG_PACKAGE_MANAGER, "queueInstall",
-                            System.identityHashCode(params));
+                    if (mPendingInstalls.size() > 0) {
+                        HandlerParams params = mPendingInstalls.remove(0);
+                        Trace.asyncTraceEnd(TRACE_TAG_PACKAGE_MANAGER, "queueInstall",
+                                System.identityHashCode(params));
+                    }
                     break;
                 }
                 case SEND_PENDING_BROADCAST: {
@@ -4020,7 +4022,9 @@ public class PackageManagerService extends IPackageManager.Stub
         try {
             if (permissions.contains("android.permission.FAKE_PACKAGE_SIGNATURE")
                     && p.applicationInfo.targetSdkVersion > Build.VERSION_CODES.LOLLIPOP_MR1
-                    && p.mAppMetaData != null) {
+                    && p.mAppMetaData != null
+                    && android.provider.Settings.Global.getInt(mContext.getContentResolver(),
+                       android.provider.Settings.Global.ALLOW_SIGNATURE_FAKE, 0) == 1) {
                 String sig = p.mAppMetaData.getString("fake-signature");
                 if (sig != null) {
                     pi.signatures = new Signature[] {new Signature(sig)};
@@ -9867,6 +9871,15 @@ public class PackageManagerService extends IPackageManager.Stub
                     }
 
                     PackageParser.Package libPkg = mPackages.get(libEntry.apk);
+                    if (changingLib != null && changingLib.packageName.equals(libEntry.apk)) {
+                        // If we are doing this while in the middle of updating a library apk,
+                        // then we need to make sure to use that new apk for determining the
+                        // dependencies here.  (We haven't yet finished committing the new apk
+                        // to the package manager state.)
+                        if (libPkg == null || libPkg.packageName.equals(changingLib.packageName)) {
+                            libPkg = changingLib;
+                        }
+                    }
                     if (libPkg == null) {
                         throw new PackageManagerException(INSTALL_FAILED_MISSING_SHARED_LIBRARY,
                                 "Package " + packageName + " requires unavailable static shared"
@@ -9934,7 +9947,7 @@ public class PackageManagerService extends IPackageManager.Stub
     }
 
     private static boolean hasString(List<String> list, List<String> which) {
-        if (list == null) {
+        if (list == null || which == null) {
             return false;
         }
         for (int i=list.size()-1; i>=0; i--) {
@@ -9956,7 +9969,7 @@ public class PackageManagerService extends IPackageManager.Stub
                     && !hasString(pkg.usesOptionalLibraries, changingPkg.libraryNames)
                     && !ArrayUtils.contains(pkg.usesStaticLibraries,
                             changingPkg.staticSharedLibName)) {
-                return null;
+                continue;
             }
             if (res == null) {
                 res = new ArrayList<>();

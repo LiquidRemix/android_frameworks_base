@@ -78,23 +78,14 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private ImageView mLiquidLogo;
     private boolean mShowLogo;
 
-    private class LiquidSettingsObserver extends ContentObserver {
-        LiquidSettingsObserver(Handler handler) {
-            super(handler);
-        }
+    // custom carrier label
+    private View mCustomCarrierLabel;
+    private int mShowCarrierLabel;
 
-        void observe() {
-            getContext().getContentResolver().registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.STATUS_BAR_LOGO),
-                    false, this, UserHandle.USER_ALL);
-        }
-
-        @Override
-        public void onChange(boolean selfChange) {
-            updateLogoSettings(true);
-        }
-    }
-    private LiquidSettingsObserver mLiquidSettingsObserver = new LiquidSettingsObserver(mHandler);
+    // Statusbar Weather Image
+    private View mWeatherImageView;
+    private View mWeatherTextView;
+    private int mShowWeather;
 
     private class SettingsObserver extends ContentObserver {
        SettingsObserver(Handler handler) {
@@ -103,7 +94,16 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
 
        void observe() {
          mContentResolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_LOGO),
+                    false, this, UserHandle.USER_ALL);
+         mContentResolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.STATUSBAR_CLOCK_STYLE),
+                    false, this, UserHandle.USER_ALL);
+         mContentResolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_SHOW_CARRIER),
+                    false, this, UserHandle.USER_ALL);
+         mContentResolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_SHOW_WEATHER_TEMP),
                     false, this, UserHandle.USER_ALL);
        }
 
@@ -154,6 +154,9 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         mRightClock = mStatusBar.findViewById(R.id.right_clock);
         mLiquidLogo = (ImageView) mStatusBar.findViewById(R.id.status_bar_logo);
         Dependency.get(DarkIconDispatcher.class).addDarkReceiver(mLiquidLogo);
+        mCustomCarrierLabel = mStatusBar.findViewById(R.id.statusbar_carrier_text);
+        mWeatherTextView = mStatusBar.findViewById(R.id.weather_temp);
+        mWeatherImageView = mStatusBar.findViewById(R.id.weather_image);
         updateSettings(false);
         updateLogoSettings(false);
         showSystemIconArea(false);
@@ -221,10 +224,12 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         if ((diff1 & DISABLE_NOTIFICATION_ICONS) != 0) {
             if ((state1 & DISABLE_NOTIFICATION_ICONS) != 0) {
                 hideNotificationIconArea(animate);
+                hideCarrierName(animate);
                 animateHide(mClockView, animate, false);
             } else {
                 showNotificationIconArea(animate);
                 updateClockStyle(animate);
+                showCarrierName(animate);
             }
         }
     }
@@ -261,11 +266,17 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     public void hideSystemIconArea(boolean animate) {
         animateHide(mSystemIconArea, animate, true);
         animateHide(mCenterClockLayout, animate, true);
+        if (mClockStyle == 2) {
+            animateHide(mRightClock, animate, true);
+        }
     }
 
     public void showSystemIconArea(boolean animate) {
         animateShow(mSystemIconArea, animate);
         animateShow(mCenterClockLayout, animate);
+        if (mClockStyle == 2) {
+            animateShow(mRightClock, animate);
+        }
     }
 
     public void hideNotificationIconArea(boolean animate) {
@@ -276,8 +287,8 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     public void showNotificationIconArea(boolean animate) {
         animateShow(mNotificationIconAreaInner, animate);
         if (mShowLogo) {
-			animateShow(mLiquidLogo, animate);
-		}
+            animateShow(mLiquidLogo, animate);
+        }
         animateShow(mCenterClockLayout, animate);
     }
 
@@ -290,6 +301,18 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     public void showOperatorName(boolean animate) {
         if (mOperatorNameFrame != null) {
             animateShow(mOperatorNameFrame, animate);
+        }
+    }
+
+    public void hideCarrierName(boolean animate) {
+        if (mCustomCarrierLabel != null) {
+            animateHide(mCustomCarrierLabel, animate, true);
+        }
+    }
+
+    public void showCarrierName(boolean animate) {
+        if (mCustomCarrierLabel != null) {
+            setCarrierLabel(animate);
         }
     }
 
@@ -366,7 +389,14 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     public void updateSettings(boolean animate) {
         mClockStyle = Settings.System.getIntForUser(mContentResolver,
                 Settings.System.STATUSBAR_CLOCK_STYLE, 0, UserHandle.USER_CURRENT);
+        mShowCarrierLabel = Settings.System.getIntForUser(
+                getContext().getContentResolver(), Settings.System.STATUS_BAR_SHOW_CARRIER, 1,
+                UserHandle.USER_CURRENT);
+        mShowWeather = Settings.System.getIntForUser(
+                getContext().getContentResolver(), Settings.System.STATUS_BAR_SHOW_WEATHER_TEMP, 0,
+                UserHandle.USER_CURRENT);
         updateClockStyle(animate);
+        setCarrierLabel(animate);
     }
 
     private void updateClockStyle(boolean animate) {
@@ -374,6 +404,14 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
             animateHide(mClockView, animate, false);
         } else {
             animateShow(mClockView, animate);
+        }
+    }
+
+    private void setCarrierLabel(boolean animate) {
+        if (mShowCarrierLabel == 2 || mShowCarrierLabel == 3) {
+            animateShow(mCustomCarrierLabel, animate);
+        } else {
+            animateHide(mCustomCarrierLabel, animate, false);
         }
     }
 

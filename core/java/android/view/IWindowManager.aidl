@@ -314,6 +314,11 @@ interface IWindowManager
     int getNavBarPosition();
 
     /**
+     * Simulate a hardware menu key
+     */
+    boolean hasPermanentMenuKey();
+
+    /**
      * Lock the device immediately with the specified options (can be null).
      */
     void lockNow(in Bundle options);
@@ -445,4 +450,9 @@ interface IWindowManager
     boolean isGestureButtonEnabled();
 
     boolean isGestureButtonRegion(int i, int i2);
+
+    /**
+     * Call screen record from WindowManager.
+     */
+    void screenRecordAction(int mode);
 }

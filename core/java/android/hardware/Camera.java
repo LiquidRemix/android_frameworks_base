@@ -47,7 +47,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.os.SystemProperties;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.app.IAppOpsCallback;
@@ -291,51 +290,34 @@ public class Camera {
      *   cameras or an error was encountered enumerating them.
      */
     public static int getNumberOfCameras() {
+        boolean exposeAuxCamera = false;
+        String packageName = ActivityThread.currentOpPackageName();
         /* Force to expose only two cameras
          * if the package name does not falls in this bucket
          */
-        int numberOfCameras = native_getNumberOfCameras();
-        if ((numberOfCameras > 2) && !shouldExposeAuxCamera()) {
+        String packageList = SystemProperties.get("vendor.camera.aux.packagelist");
+        if (packageList.length() > 0) {
+            TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(',');
+            splitter.setString(packageList);
+            for (String str : splitter) {
+                if (packageName.equals(str)) {
+                    exposeAuxCamera = true;
+                    break;
+                }
+            }
+        }
+        int numberOfCameras = _getNumberOfCameras();
+        if (exposeAuxCamera == false && (numberOfCameras > 2)) {
             numberOfCameras = 2;
         }
         return numberOfCameras;
     }
 
     /**
-     * Wether to expose Aux cameras
-     */
-    /** @hide */
-    public static boolean shouldExposeAuxCamera() {
-        String packageName = ActivityThread.currentOpPackageName();
-        // This should be .packagewhitelist but we shouldn't change qualcomm's default
-        String packageList = SystemProperties.get("vendor.camera.aux.packagelist");
-        String packageBlacklist = SystemProperties.get("vendor.camera.aux.packageblacklist");
-        if (packageList.length() > 0) {
-            TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(',');
-            splitter.setString(packageList);
-            for (String str : splitter) {
-                if (packageName.equals(str)) {
-                    return true;
-                }
-            }
-            return false;
-        } else if (packageBlacklist.length() > 0) {
-            TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(',');
-            splitter.setString(packageBlacklist);
-            for (String str : splitter) {
-                if (packageName.equals(str)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
      * Returns the number of physical cameras available on this device.
      */
     /** @hide */
-    public native static int native_getNumberOfCameras();
+    public native static int _getNumberOfCameras();
 
     /**
      * Returns the information about a particular camera.
@@ -346,7 +328,7 @@ public class Camera {
      *    low-level failure).
      */
     public static void getCameraInfo(int cameraId, CameraInfo cameraInfo) {
-        if (cameraId >= getNumberOfCameras()) {
+        if(cameraId >= getNumberOfCameras()){
             throw new RuntimeException("Unknown camera ID");
         }
         _getCameraInfo(cameraId, cameraInfo);
@@ -592,21 +574,8 @@ public class Camera {
             mEventHandler = null;
         }
 
-        String packageName = ActivityThread.currentOpPackageName();
-
-        //Force HAL1 if the package name falls in this bucket
-        String packageList = SystemProperties.get("camera.hal1.packagelist", "");
-        if (packageList.length() > 0) {
-            TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(',');
-            splitter.setString(packageList);
-            for (String str : splitter) {
-                if (packageName.equals(str)) {
-                    halVersion = CAMERA_HAL_API_VERSION_1_0;
-                    break;
-                }
-            }
-        }
-        return native_setup(new WeakReference<Camera>(this), cameraId, halVersion, packageName);
+        return native_setup(new WeakReference<Camera>(this), cameraId, halVersion,
+                ActivityThread.currentOpPackageName());
     }
 
     private int cameraInitNormal(int cameraId) {
@@ -633,8 +602,8 @@ public class Camera {
 
     /** used by Camera#open, Camera#open(int) */
     Camera(int cameraId) {
-        if (cameraId >= getNumberOfCameras()) {
-            throw new RuntimeException("Unknown camera ID");
+        if(cameraId >= getNumberOfCameras()){
+             throw new RuntimeException("Unknown camera ID");
         }
         int err = cameraInitNormal(cameraId);
         if (checkInitErrors(err)) {
@@ -1886,6 +1855,20 @@ public class Camera {
     }
 
     /**
+     * Send a vendor-specific camera command
+     *
+     * @hide
+     */
+    public final void sendVendorCommand(int cmd, int arg1, int arg2) {
+        if (cmd < 1000) {
+            throw new IllegalArgumentException("Command numbers must be at least 1000");
+        }
+        _sendVendorCommand(cmd, arg1, arg2);
+    }
+
+    private native final void _sendVendorCommand(int cmd, int arg1, int arg2);
+
+    /**
      * Callback interface for zoom changes during a smooth zoom operation.
      *
      * @see #setZoomChangeListener(OnZoomChangeListener)
@@ -2107,6 +2090,23 @@ public class Camera {
          * as a set. Either they are all valid, or none of them are.
          */
         public Point mouth = null;
+
+        /**
+         * {@hide}
+         */
+        public int smileDegree = 0;
+        /**
+         * {@hide}
+         */
+        public int smileScore = 0;
+        /**
+         * {@hide}
+         */
+        public int blinkDetected = 0;
+        /**
+         * {@hide}
+         */
+        public int faceRecognised = 0;
     }
 
     /**

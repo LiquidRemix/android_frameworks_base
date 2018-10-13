@@ -302,18 +302,27 @@ public class KeyguardIndicationController {
                 if (!TextUtils.isEmpty(mTransientIndication)) {
                     // When dozing we ignore any text color and use white instead, because
                     // colors can be hard to read in low brightness.
-                    mTextView.switchIndication(mTransientIndication);
+                    mTextView.switchIndication(mTransientIndication, false /* animate */);
                 } else if (mPowerPluggedIn) {
                     String indication = computePowerIndication();
                     if (animate) {
                         animateText(mTextView, indication);
                     } else {
-                        mTextView.switchIndication(indication);
+                        mTextView.switchIndication(indication, false /* animate */);
                     }
                 } else {
-                    String percentage = NumberFormat.getPercentInstance()
-                            .format(mBatteryLevel / 100f);
-                    mTextView.switchIndication(percentage);
+                    // Use the high voltage symbol ⚡ (u26A1 unicode) but prevent the system
+                    // to load its emoji colored variant with the uFE0E flag
+                    boolean showAmbientBattery = Settings.System.getIntForUser(mContext.getContentResolver(),
+                        Settings.System.AMBIENT_BATTERY_PERCENT, 0, UserHandle.USER_CURRENT) != 0;
+                    if (showAmbientBattery) {
+                        String bolt = "\u26A1\uFE0E";
+                        CharSequence chargeIndicator = (mPowerPluggedIn ? (bolt + " ") : "") +
+                                NumberFormat.getPercentInstance().format(mBatteryLevel / 100f);
+                        mTextView.switchIndication(chargeIndicator);
+                    } else {
+                        mTextView.switchIndication(null);
+                    }
                 }
                 return;
             }

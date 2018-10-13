@@ -27,7 +27,10 @@ import android.content.pm.PackageItemInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources.Theme;
+import android.database.ContentObserver;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteCompatibilityWalFlags;
+import android.database.sqlite.SQLiteGlobal;
 import android.os.BaseBundle;
 import android.os.Binder;
 import android.os.Build;
@@ -47,6 +50,7 @@ import android.os.SystemProperties;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.os.storage.IStorageManager;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.EventLog;
 import android.util.Slog;
@@ -94,6 +98,7 @@ import com.android.server.oemlock.OemLockService;
 import com.android.server.om.OverlayManagerService;
 import com.android.server.os.DeviceIdentifiersPolicyService;
 import com.android.server.os.SchedulingPolicyService;
+import com.android.server.pocket.PocketService;
 import com.android.server.pm.BackgroundDexOptService;
 import com.android.server.pm.CrossProfileAppsService;
 import com.android.server.pm.Installer;
@@ -123,6 +128,7 @@ import com.android.server.usage.UsageStatsService;
 import com.android.server.vr.VrManagerService;
 import com.android.server.webkit.WebViewUpdateService;
 import com.android.server.wm.WindowManagerService;
+import com.android.server.mirrorpowersave.LcdPowerSaveService;
 
 import dalvik.system.VMRuntime;
 
@@ -267,6 +273,8 @@ public final class SystemServer {
     private EntropyMixer mEntropyMixer;
     private SmartPixelsReceiver mSmartPixelsReceiver;
 
+    private LcdPowerSaveService mLcdPowerSaveService;
+
     private boolean mOnlyCore;
     private boolean mFirstBoot;
     private final boolean mRuntimeRestart;
@@ -306,6 +314,20 @@ public final class SystemServer {
 
         mRuntimeStartElapsedTime = SystemClock.elapsedRealtime();
         mRuntimeStartUptime = SystemClock.uptimeMillis();
+    }
+
+    private class AdbPortObserver extends ContentObserver {
+        public AdbPortObserver() {
+            super(null);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            int adbPort = Settings.Secure.getInt(mContentResolver,
+                    Settings.Secure.ADB_PORT, 0);
+            // Setting this will control whether ADB runs on TCP/IP or USB
+            SystemProperties.set("adb.network.port", Integer.toString(adbPort));
+        }
     }
 
     private void run() {
@@ -350,6 +372,10 @@ public final class SystemServer {
             Binder.setWarnOnBlocking(true);
             // The system server should always load safe labels
             PackageItemInfo.setForceSafeLabels(true);
+
+            // Default to FULL within the system server.
+            SQLiteGlobal.sDefaultSyncMode = SQLiteGlobal.SYNC_MODE_FULL;
+
             // Deactivate SQLiteCompatibilityWalFlags until settings provider is initialized
             SQLiteCompatibilityWalFlags.init(null);
 
@@ -573,6 +599,8 @@ public final class SystemServer {
         traceBeginAndSlog("StartPowerManager");
         mPowerManagerService = mSystemServiceManager.startService(PowerManagerService.class);
         traceEnd();
+
+        mLcdPowerSaveService = mSystemServiceManager.startService(LcdPowerSaveService.class);
 
         // Now that the power manager has been started, let the activity manager
         // initialize power management features.
@@ -1554,6 +1582,8 @@ public final class SystemServer {
             traceBeginAndSlog("StartLauncherAppsService");
             mSystemServiceManager.startService(LauncherAppsService.class);
             traceEnd();
+            Slog.i(TAG, "Starting PocketService");
+            mSystemServiceManager.startService(PocketService.class);
 
             traceBeginAndSlog("StartCrossProfileAppsService");
             mSystemServiceManager.startService(CrossProfileAppsService.class);
@@ -1617,6 +1647,15 @@ public final class SystemServer {
         traceBeginAndSlog("StartStatsCompanionService");
         mSystemServiceManager.startService(StatsCompanionService.Lifecycle.class);
         traceEnd();
+
+        // Make sure the ADB_ENABLED setting value matches the secure property value
+        Settings.Secure.putInt(mContentResolver, Settings.Secure.ADB_PORT,
+                SystemProperties.getInt("service.adb.tcp.port", -1));
+
+        // Register observer to listen for settings changes
+        mContentResolver.registerContentObserver(
+                Settings.Secure.getUriFor(Settings.Secure.ADB_PORT),
+                false, new AdbPortObserver());
 
         // Before things start rolling, be sure we have decided whether
         // we are in safe mode.
@@ -1715,6 +1754,12 @@ public final class SystemServer {
         traceEnd();
 
         traceBeginAndSlog("MakeDisplayManagerServiceReady");
+        try {
+            mLcdPowerSaveService.systemReady();
+        } catch (Throwable e) {
+            reportWtf("making mirroring lcd power saving ready", e);
+        }
+
         try {
             // TODO: use boot phase and communicate these flags some other way
             mDisplayManagerService.systemReady(safeMode, mOnlyCore);

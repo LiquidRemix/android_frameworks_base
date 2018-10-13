@@ -128,6 +128,8 @@ import android.os.UserManager;
 import android.os.Vibrator;
 import android.os.health.SystemHealthManager;
 import android.os.storage.StorageManager;
+import android.pocket.IPocketService;
+import android.pocket.PocketManager;
 import android.print.IPrintManager;
 import android.print.PrintManager;
 import android.service.oemlock.IOemLockService;
@@ -158,6 +160,8 @@ import com.android.internal.app.IAppOpsService;
 import com.android.internal.app.IBatteryStats;
 import com.android.internal.app.ISoundTriggerService;
 import com.android.internal.appwidget.IAppWidgetService;
+import com.android.internal.mirrorpowersave.ILcdPowerSave;
+import com.android.internal.mirrorpowersave.LcdPowerSaveManager;
 import com.android.internal.net.INetworkWatchlistManager;
 import com.android.internal.os.IDropBoxManagerService;
 import com.android.internal.policy.PhoneLayoutInflater;
@@ -781,6 +785,15 @@ final class SystemServiceRegistry {
                 return new FingerprintManager(ctx.getOuterContext(), service);
             }});
 
+        registerService(Context.POCKET_SERVICE, PocketManager.class,
+                new CachedServiceFetcher<PocketManager>() {
+            @Override
+            public PocketManager createService(ContextImpl ctx) {
+                IBinder binder = ServiceManager.getService(Context.POCKET_SERVICE);
+                IPocketService service = IPocketService.Stub.asInterface(binder);
+                return new PocketManager(ctx.getOuterContext(), service);
+            }});
+
         registerService(Context.TV_INPUT_SERVICE, TvInputManager.class,
                 new CachedServiceFetcher<TvInputManager>() {
             @Override
@@ -997,6 +1010,15 @@ final class SystemServiceRegistry {
                                         Context.DEVICE_IDLE_CONTROLLER));
                         return new DeviceIdleManager(ctx.getOuterContext(), service);
                     }});
+
+        registerService(Context.LCD_POWER_SAVE_SERVICE, LcdPowerSaveManager.class,
+                new CachedServiceFetcher<LcdPowerSaveManager>() {
+            @Override
+            public LcdPowerSaveManager createService(ContextImpl ctx) {
+                IBinder b = ServiceManager.getService(Context.LCD_POWER_SAVE_SERVICE);
+                ILcdPowerSave service = ILcdPowerSave.Stub.asInterface(b);
+                return new LcdPowerSaveManager(ctx.getOuterContext(), service);
+            }});
     }
 
     /**

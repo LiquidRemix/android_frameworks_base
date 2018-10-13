@@ -553,11 +553,11 @@ public class ActivityManagerService extends IActivityManager.Stub
     public static final String ACTION_TRIGGER_IDLE = "com.android.server.ACTION_TRIGGER_IDLE";
 
     /** Control over CPU and battery monitoring */
-    // write battery stats every 30 minutes.
-    static final long BATTERY_STATS_TIME = 30 * 60 * 1000;
+    // write battery stats every 45 minutes.
+    static final long BATTERY_STATS_TIME = 45 * 60 * 1000;
     static final boolean MONITOR_CPU_USAGE = true;
-    // don't sample cpu less than every 5 seconds.
-    static final long MONITOR_CPU_MIN_TIME = 5 * 1000;
+    // don't sample cpu less than every 10 seconds.
+    static final long MONITOR_CPU_MIN_TIME = 10 * 1000;
     // wait possibly forever for next cpu sample.
     static final long MONITOR_CPU_MAX_TIME = 0x0fffffff;
     static final boolean MONITOR_THREAD_CPU_USAGE = false;
@@ -580,6 +580,8 @@ public class ActivityManagerService extends IActivityManager.Stub
     // How long we wait for an attached process to publish its content providers
     // before we decide it must be hung.
     static final int CONTENT_PROVIDER_PUBLISH_TIMEOUT = 10*1000;
+    // How long we wait for provider to be notify before we decide it may be hang.
+    static final int CONTENT_PROVIDER_WAIT_TIMEOUT = 20*1000;
 
     // How long we wait for a launched process to attach to the activity manager
     // before we decide it's never going to come up for real, when the process was
@@ -1935,6 +1937,7 @@ public class ActivityManagerService extends IActivityManager.Stub
     static final int PUSH_TEMP_WHITELIST_UI_MSG = 68;
     static final int SERVICE_FOREGROUND_CRASH_MSG = 69;
     static final int DISPATCH_OOM_ADJ_OBSERVER_MSG = 70;
+    static final int CONTENT_PROVIDER_WAIT_TIMEOUT_MSG = 71;
 
     static final int FIRST_ACTIVITY_STACK_MSG = 100;
     static final int FIRST_BROADCAST_QUEUE_MSG = 200;
@@ -1948,6 +1951,16 @@ public class ActivityManagerService extends IActivityManager.Stub
 
     CompatModeDialog mCompatModeDialog;
     long mLastMemUsageReportTime = 0;
+
+    // Min aging threshold in milliseconds to consider a B-service
+    int mMinBServiceAgingTime =
+            SystemProperties.getInt("ro.vendor.qti.sys.fw.bservice_age", 5000);
+    // Threshold for B-services when in memory pressure
+    int mBServiceAppThreshold =
+            SystemProperties.getInt("ro.vendor.qti.sys.fw.bservice_limit", 5);
+    // Enable B-service aging propagation on memory pressure.
+    boolean mEnableBServicePropagation =
+            SystemProperties.getBoolean("ro.vendor.qti.sys.fw.bservice_enable", false);
 
     /**
      * Flag whether the current user is a "monkey", i.e. whether
@@ -2050,10 +2063,17 @@ public class ActivityManagerService extends IActivityManager.Stub
                     }
                     AppErrorResult res = (AppErrorResult) data.get("result");
                     if (mShowDialogs && !mSleeping && !mShuttingDown) {
-                        Dialog d = new StrictModeViolationDialog(mUiContext,
-                                ActivityManagerService.this, res, proc);
-                        d.show();
-                        proc.crashDialog = d;
+
+                        if (Settings.System.getInt(mContext.getContentResolver(),
+                                Settings.System.DISABLE_FC_NOTIFICATIONS, 0) != 1) {;
+                             Dialog d = new StrictModeViolationDialog(mUiContext,
+                                    ActivityManagerService.this, res, proc);
+                            d.show();
+                            proc.crashDialog = d;
+                        } else {
+                            Slog.w(TAG, "Skipping crash dialog of " + proc + ": disabled");
+                            res.set(0);
+                        }
                     } else {
                         // The device is asleep, so just pretend that the user
                         // saw a crash dialog and hit "force quit".
@@ -2274,6 +2294,12 @@ public class ActivityManagerService extends IActivityManager.Stub
                 ProcessRecord app = (ProcessRecord)msg.obj;
                 synchronized (ActivityManagerService.this) {
                     processContentProviderPublishTimedOutLocked(app);
+                }
+            } break;
+            case CONTENT_PROVIDER_WAIT_TIMEOUT_MSG: {
+                ContentProviderRecord cpr = (ContentProviderRecord)msg.obj;
+                synchronized (ActivityManagerService.this) {
+                    processContentProviderWaitTimedOutLocked(cpr);
                 }
             } break;
             case KILL_APPLICATION_MSG: {
@@ -7513,6 +7539,30 @@ public class ActivityManagerService extends IActivityManager.Stub
         removeProcessLocked(app, false, true, "timeout publishing content providers");
     }
 
+    @GuardedBy("this")
+    private final void processContentProviderWaitTimedOutLocked(ContentProviderRecord cpr) {
+        try {
+            if (mLaunchingProviders.contains(cpr)) {
+                if (DEBUG_MU) Slog.v(TAG_MU,
+                    "Remove from mLaunchingProviders, " + cpr
+                    + " launchingApp=" + cpr.launchingApp);
+                mLaunchingProviders.remove(cpr);
+            }
+
+            if (DEBUG_MU) Slog.v(TAG_MU,
+                "RemoveMessages CONTENT_PROVIDER_WAIT_TIMEOUT_MSG, " + cpr
+                + " launchingApp=" + cpr.launchingApp);
+            mHandler.removeMessages(CONTENT_PROVIDER_WAIT_TIMEOUT_MSG, cpr);
+            synchronized (cpr) {
+                cpr.notifyAll();
+                cpr.launchingApp = null;
+            }
+        } catch (Exception e) {
+            if (DEBUG_MU) Slog.v(TAG_MU,
+                "processContentProviderWaitTimedOutLocked exception, " + e);
+        }
+    }
+
     private final void processStartTimedOutLocked(ProcessRecord app) {
         final int pid = app.pid;
         boolean gone = false;
@@ -12336,11 +12386,16 @@ public class ActivityManagerService extends IActivityManager.Stub
                 }
 
                 ComponentName comp = new ComponentName(cpi.packageName, cpi.name);
-                checkTime(startTime, "getContentProviderImpl: before getProviderByClass");
-                cpr = mProviderMap.getProviderByClass(comp, userId);
-                checkTime(startTime, "getContentProviderImpl: after getProviderByClass");
-                final boolean firstClass = cpr == null;
-                if (firstClass) {
+                boolean inLaunching = false;
+                for (int i = 0; i < mLaunchingProviders.size(); i++) {
+                    if (mLaunchingProviders.get(i).name.equals(comp)
+                            && mLaunchingProviders.get(i).uid == cpi.applicationInfo.uid) {
+                        inLaunching = true;
+                        cpr = mLaunchingProviders.get(i);
+                        break;
+                    }
+                }
+                if (!inLaunching) {
                     final long ident = Binder.clearCallingIdentity();
 
                     // If permissions need a review before any of the app components can run,
@@ -12458,7 +12513,7 @@ public class ActivityManagerService extends IActivityManager.Stub
 
                 // Make sure the provider is published (the same provider class
                 // may be published under multiple names).
-                if (firstClass) {
+                if (!inLaunching) {
                     mProviderMap.putProviderByClass(comp, cpr);
                 }
 
@@ -12495,11 +12550,34 @@ public class ActivityManagerService extends IActivityManager.Stub
                     if (conn != null) {
                         conn.waiting = true;
                     }
+
+                    // add 20s wait timeout
+                    if (!mHandler.hasMessages(CONTENT_PROVIDER_WAIT_TIMEOUT_MSG, cpr)) {
+                        if (DEBUG_MU) Slog.v(TAG_MU,
+                            "SendMessageDelayed CONTENT_PROVIDER_WAIT_TIMEOUT_MSG, " + cpr
+                            + " launchingApp=" + cpr.launchingApp);
+                        Message msg = mHandler.obtainMessage(CONTENT_PROVIDER_WAIT_TIMEOUT_MSG);
+                        msg.obj = cpr;
+                        mHandler.sendMessageDelayed(msg, CONTENT_PROVIDER_WAIT_TIMEOUT);
+                    } else {
+                        if (DEBUG_MU) Slog.v(TAG_MU,
+                            "There is another waiting to start provider " + cpr
+                            + " launchingApp=" + cpr.launchingApp
+                            + ", not send CONTENT_PROVIDER_WAIT_TIMEOUT_MSG again");
+                    }
+
                     cpr.wait();
                 } catch (InterruptedException ex) {
                 } finally {
                     if (conn != null) {
                         conn.waiting = false;
+                    }
+                    // remove wait time out message
+                    if (mHandler.hasMessages(CONTENT_PROVIDER_WAIT_TIMEOUT_MSG, cpr)) {
+                        if (DEBUG_MU) Slog.v(TAG_MU,
+                            "After wait removeMessages CONTENT_PROVIDER_WAIT_TIMEOUT_MSG, "
+                            + cpr + " launchingApp=" + cpr.launchingApp);
+                            mHandler.removeMessages(CONTENT_PROVIDER_WAIT_TIMEOUT_MSG, cpr);
                     }
                 }
             }
@@ -25005,6 +25083,9 @@ public class ActivityManagerService extends IActivityManager.Stub
         int nextCachedAdj = curCachedAdj+1;
         int curEmptyAdj = ProcessList.CACHED_APP_MIN_ADJ;
         int nextEmptyAdj = curEmptyAdj+2;
+        ProcessRecord selectedAppRecord = null;
+        long serviceLastActivity = 0;
+        int numBServices = 0;
 
         boolean retryCycles = false;
 
@@ -25013,8 +25094,37 @@ public class ActivityManagerService extends IActivityManager.Stub
             ProcessRecord app = mLruProcesses.get(i);
             app.containsCycle = false;
         }
+
         for (int i=N-1; i>=0; i--) {
             ProcessRecord app = mLruProcesses.get(i);
+            if (mEnableBServicePropagation && app.serviceb
+                    && (app.curAdj == ProcessList.SERVICE_B_ADJ)) {
+                numBServices++;
+                for (int s = app.services.size() - 1; s >= 0; s--) {
+                    ServiceRecord sr = app.services.valueAt(s);
+                    if (DEBUG_OOM_ADJ) Slog.d(TAG,"app.processName = " + app.processName
+                            + " serviceb = " + app.serviceb + " s = " + s + " sr.lastActivity = "
+                            + sr.lastActivity + " packageName = " + sr.packageName
+                            + " processName = " + sr.processName);
+                    if (SystemClock.uptimeMillis() - sr.lastActivity
+                            < mMinBServiceAgingTime) {
+                        if (DEBUG_OOM_ADJ) {
+                            Slog.d(TAG,"Not aged enough!!!");
+                        }
+                        continue;
+                    }
+                    if (serviceLastActivity == 0) {
+                        serviceLastActivity = sr.lastActivity;
+                        selectedAppRecord = app;
+                    } else if (sr.lastActivity < serviceLastActivity) {
+                        serviceLastActivity = sr.lastActivity;
+                        selectedAppRecord = app;
+                    }
+                }
+            }
+            if (DEBUG_OOM_ADJ && selectedAppRecord != null) Slog.d(TAG,
+                    "Identified app.processName = " + selectedAppRecord.processName
+                    + " app.pid = " + selectedAppRecord.pid);
             if (!app.killedByAm && app.thread != null) {
                 app.procStateChanged = false;
                 computeOomAdjLocked(app, ProcessList.UNKNOWN_ADJ, TOP_APP, true, now);
@@ -25168,6 +25278,14 @@ public class ActivityManagerService extends IActivityManager.Stub
                     numTrimming++;
                 }
             }
+        }
+        if ((numBServices > mBServiceAppThreshold) && (true == mAllowLowerMemLevel)
+                && (selectedAppRecord != null)) {
+            ProcessList.setOomAdj(selectedAppRecord.pid, selectedAppRecord.info.uid,
+                    ProcessList.CACHED_APP_MAX_ADJ);
+            selectedAppRecord.setAdj = selectedAppRecord.curAdj;
+            if (DEBUG_OOM_ADJ) Slog.d(TAG,"app.processName = " + selectedAppRecord.processName
+                        + " app.pid = " + selectedAppRecord.pid + " is moved to higher adj");
         }
 
         incrementProcStateSeqAndNotifyAppsLocked();

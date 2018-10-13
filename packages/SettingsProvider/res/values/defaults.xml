@@ -167,7 +167,7 @@
     <integer name="def_lock_screen_show_notifications">1</integer>
 
     <!-- Default for Settings.Secure.LOCK_SCREEN_ALLOW_PRIVATE_NOTIFICATIONS -->
-    <bool name="def_lock_screen_allow_private_notifications">true</bool>
+    <bool name="def_lock_screen_allow_private_notifications">false</bool>
 
     <!-- Default for Settings.Global.HEADS_UP_NOTIFICATIONS_ENABLED, 1==on -->
     <integer name="def_heads_up_enabled">1</integer>
@@ -220,4 +220,8 @@
 
     <!-- Default for Settings.Global.DEVELOPMENT_SETTINGS_ENABLED -->
     <integer  name="def_development_settings">1</integer>
+
+    <!-- Default for Settings.Global.TETHER_DUN_REQUIRED -->
+    <integer name="def_tether_dun_required">0</integer>
+
 </resources>

@@ -166,7 +166,6 @@
     </string-array>
 
     <array name="sim_colors">
-        <item>#ff2581df</item>
         <item>@color/Teal_800</item>
         <item>@color/Blue_800</item>
         <item>@color/Indigo_800</item>
@@ -179,11 +178,13 @@
     <string-array name="resolver_target_actions_pin">
         <item>@string/pin_target</item>
         <item>@string/app_info</item>
+        <item>@string/app_blacklist</item>
     </string-array>
 
     <string-array name="resolver_target_actions_unpin">
         <item>@string/unpin_target</item>
         <item>@string/app_info</item>
+        <item>@string/app_blacklist</item>
     </string-array>
 
 </resources>

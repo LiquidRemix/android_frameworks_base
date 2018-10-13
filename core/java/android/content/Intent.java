@@ -2885,6 +2885,21 @@ public class Intent implements Parcelable, Cloneable {
     public static final String ACTION_AIRPLANE_MODE_CHANGED = "android.intent.action.AIRPLANE_MODE";
 
     /**
+     * <p>Broadcast Action: The user has changed carrier label:</p>
+     * <ul>
+     *   <li><em>state</em> - String value.</li>
+     * </ul>
+     *
+     * <p class="note">This is a protected intent that can only be sent
+     * by the system.
+     *
+     * @hide
+     */
+    //@SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
+    public static final String ACTION_CUSTOM_CARRIER_LABEL_CHANGED
+            = "android.intent.action.CUSTOM_CARRIER_LABEL";
+
+    /**
      * Broadcast Action: Some content providers have parts of their namespace
      * where they publish new events or items that the user may be especially
      * interested in. For these things, they may broadcast this action when the
@@ -10123,7 +10138,12 @@ public class Intent implements Parcelable, Cloneable {
             if (ATTR_ACTION.equals(attrName)) {
                 intent.setAction(attrValue);
             } else if (ATTR_DATA.equals(attrName)) {
-                intent.setData(Uri.parse(attrValue));
+                //Ensure Intent Type can be restored if it is not empty
+                if (intent.getType() != null) {
+                    intent.setDataAndType(Uri.parse(attrValue), intent.getType());
+                } else {
+                    intent.setData(Uri.parse(attrValue));
+                }
             } else if (ATTR_TYPE.equals(attrName)) {
                 intent.setType(attrValue);
             } else if (ATTR_COMPONENT.equals(attrName)) {

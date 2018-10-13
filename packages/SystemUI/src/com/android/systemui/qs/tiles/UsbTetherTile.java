@@ -54,7 +54,7 @@ public class UsbTetherTile extends QSTileImpl<BooleanState> {
     private boolean mUsbConnected = false;
     private boolean mUsbTetherEnabled = false;
 
-    private final Icon mIcon = ResourceIcon.get(drawable.ic_qs_usb_tether);
+    private final Icon mIcon = ResourceIcon.get(drawable.ic_qs_usb_tether_on);
 
     public UsbTetherTile(QSHost host) {
         super(host);

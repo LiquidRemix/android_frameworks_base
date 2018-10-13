@@ -39,6 +39,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.keyguard.AlphaOptimizedLinearLayout;
 import com.android.settingslib.graph.SignalDrawable;
 import com.android.systemui.R;
+import com.android.systemui.statusbar.phone.StatusBar;
 import com.android.systemui.statusbar.phone.StatusBarSignalPolicy.MobileIconState;
 import com.android.systemui.statusbar.policy.DarkIconDispatcher.DarkReceiver;
 
@@ -102,7 +103,7 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
     private void init() {
         mMobileGroup = findViewById(R.id.mobile_group);
         mMobile = findViewById(R.id.mobile_signal);
-        mMobileType = findViewById(R.id.mobile_type);
+        mMobileType = findViewById(StatusBar.USE_OLD_MOBILETYPE ? R.id.mobile_type_old : R.id.mobile_type);
         mMobileRoaming = findViewById(R.id.mobile_roaming);
         mMobileRoamingSpace = findViewById(R.id.mobile_roaming_space);
         mIn = findViewById(R.id.mobile_in);
@@ -113,6 +114,13 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
         mMobile.setImageDrawable(mMobileDrawable);
 
         initDotView();
+    }
+
+    private void updateMobileTypeView(boolean useOldStyle) {
+        int visOld = mMobileType.getVisibility();
+        mMobileType.setVisibility(View.GONE);
+        mMobileType = findViewById(useOldStyle ? R.id.mobile_type_old : R.id.mobile_type);
+        mMobileType.setVisibility(visOld);
     }
 
     private void initDotView() {
@@ -138,12 +146,15 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
             return;
         }
 
+        updateMobileTypeView(StatusBar.USE_OLD_MOBILETYPE);
+
         if (!mState.equals(state)) {
             updateState(state.copy());
         }
     }
 
     private void initViewState() {
+        updateMobileTypeView(StatusBar.USE_OLD_MOBILETYPE);
         setContentDescription(mState.contentDescription);
         if (!mState.visible) {
             mMobileGroup.setVisibility(View.GONE);
@@ -255,13 +266,13 @@ public class StatusBarMobileView extends FrameLayout implements DarkReceiver,
                 mDotView.setVisibility(View.GONE);
                 break;
             case STATE_DOT:
-                mMobileGroup.setVisibility(View.INVISIBLE);
+                mMobileGroup.setVisibility(View.GONE);
                 mDotView.setVisibility(View.VISIBLE);
                 break;
             case STATE_HIDDEN:
             default:
-                mMobileGroup.setVisibility(View.INVISIBLE);
-                mDotView.setVisibility(View.INVISIBLE);
+                mMobileGroup.setVisibility(View.GONE);
+                mDotView.setVisibility(View.GONE);
                 break;
         }
     }

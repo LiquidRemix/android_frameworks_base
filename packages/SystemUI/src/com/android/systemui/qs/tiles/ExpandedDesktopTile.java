@@ -88,21 +88,23 @@ public class ExpandedDesktopTile extends QSTileImpl<BooleanState> {
 
     @Override
     protected void handleUpdateState(BooleanState state, Object arg) {
+        state.label = mContext.getString(R.string.quick_settings_expanded_desktop_label);
+        state.secondaryLabel = null;
         if (mExpandedDesktopState == 1) {
             state.state = Tile.STATE_ACTIVE;
             state.icon = ResourceIcon.get(R.drawable.ic_qs_expanded_desktop);
-            state.label = mContext.getString(R.string.quick_settings_expanded_desktop);
+            state.secondaryLabel = mContext.getString(R.string.quick_settings_expanded_desktop);
         } else if (mExpandedDesktopState == 2) {
             state.state = Tile.STATE_ACTIVE;
             state.icon = ResourceIcon.get(R.drawable.ic_qs_expanded_statusbar_off);
-            state.label = mContext.getString(R.string.quick_settings_expanded_statusbar_off);
+            state.secondaryLabel = mContext.getString(R.string.quick_settings_expanded_statusbar_off);
         } else if (mExpandedDesktopState == 3) {
             state.state = Tile.STATE_ACTIVE;
             state.icon = ResourceIcon.get(R.drawable.ic_qs_expanded_navigation_off);
-            state.label = mContext.getString(R.string.quick_settings_expanded_navigation_off);
+            state.secondaryLabel = mContext.getString(R.string.quick_settings_expanded_navigation_off);
         } else {
             state.icon = ResourceIcon.get(R.drawable.ic_qs_expanded_desktop_off);
-            state.label = mContext.getString(R.string.quick_settings_expanded_desktop_off);
+            state.secondaryLabel = mContext.getString(R.string.quick_settings_expanded_desktop_off);
             state.state = Tile.STATE_INACTIVE;
         }
     }

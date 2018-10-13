@@ -612,7 +612,7 @@
     <integer translatable="false" name="config_wifi_framework_network_switch_rx_packet_threshold">20</integer>
 
     <!-- Integer indicating wpa_supplicant scan interval in milliseconds -->
-    <integer translatable="false" name="config_wifi_supplicant_scan_interval">15000</integer>
+    <integer translatable="false" name="config_wifi_supplicant_scan_interval">25000</integer>
 
     <!-- Integer indicating amount of time failed networks areblacklisted for the purpose
          of network switching in milliseconds -->
@@ -1267,7 +1267,7 @@
     <bool name="config_skipScreenOnBrightnessRamp">false</bool>
 
     <!-- Allow automatic adjusting of the screen brightness while dozing in low power state. -->
-    <bool name="config_allowAutoBrightnessWhileDozing">false</bool>
+    <bool name="config_allowAutoBrightnessWhileDozing">true</bool>
 
     <!-- Stability requirements in milliseconds for accepting a new brightness level.  This is used
          for debouncing the light sensor.  Different constants are used to debounce the light sensor
@@ -1801,7 +1801,7 @@
     <bool name="config_bluetooth_default_profiles">true</bool>
 
     <!-- IP address of the dns server to use if nobody else suggests one -->
-    <string name="config_default_dns_server" translatable="false">8.8.8.8</string>
+    <string name="config_default_dns_server" translatable="false">1.0.0.1</string>
 
     <!-- The default mobile provisioning apn. Empty by default, maybe overridden by
          an mcc/mnc specific config.xml -->
@@ -2280,8 +2280,10 @@
     <integer name="config_safe_media_volume_usb_mB">-3700</integer>
 
     <!-- Configure mobile network MTU. The standard default is set here but each carrier
-         may have a specific value set in an overlay config.xml file. -->
-    <integer name="config_mobile_mtu">1500</integer>
+         may have a specific value set in an overlay config.xml file. 
+         This really must be 1358 as per 3GPP standards and packet segmentation on the LTE
+         radio.-->
+    <integer name="config_mobile_mtu">1358</integer>
 
     <!-- Configure mobile tcp buffer sizes in the form:
          rat-name:rmem_min,rmem_def,rmem_max,wmem_min,wmem_def,wmem_max
@@ -2593,6 +2595,7 @@
         <item>logout</item>
         <item>users</item>
         <item>silent</item>
+        <item>onthego</item>
     </string-array>
 
     <!-- Number of milliseconds to hold a wake lock to ensure that drawing is fully
@@ -3418,13 +3421,13 @@
     <string name="config_mediaProjectionPermissionDialogComponent" translatable="false">com.android.systemui/com.android.systemui.media.MediaProjectionPermissionActivity</string>
 
     <!-- Corner radius of system dialogs -->
-    <dimen name="config_dialogCornerRadius">2dp</dimen>
+    <dimen name="config_dialogCornerRadius">8dp</dimen>
     <!-- Corner radius of system buttons -->
     <dimen name="config_buttonCornerRadius">@dimen/control_corner_material</dimen>
     <!-- Corner radius of system progress bars -->
     <dimen name="config_progressBarCornerRadius">@dimen/progress_bar_corner_material</dimen>
     <!-- Controls whether system buttons use all caps for text -->
-    <bool name="config_buttonTextAllCaps">true</bool>
+    <bool name="config_buttonTextAllCaps">false</bool>
     <!-- Name of the font family used for system surfaces where the font should use medium weight -->
     <string name="config_headlineFontFamilyMedium">@string/font_family_button_material</string>
 
@@ -3456,7 +3459,7 @@
     <bool name="config_swipe_up_gesture_default">false</bool>
 
     <!-- Whether or not swipe up gesture's opt-in setting is available on this device -->
-    <bool name="config_swipe_up_gesture_setting_available">false</bool>
+    <bool name="config_swipe_up_gesture_setting_available">true</bool>
 
     <!-- Default value for proximity check on screen wake
          NOTE ! - Enable for devices that have a fast response proximity sensor (ideally < 300ms)

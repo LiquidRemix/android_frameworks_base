@@ -23,18 +23,27 @@ import com.android.systemui.R;
 import com.android.systemui.plugins.qs.*;
 import com.android.systemui.plugins.qs.QSTileView;
 import com.android.systemui.qs.external.CustomTile;
+import com.android.systemui.qs.tiles.AdbOverNetworkTile;
 import com.android.systemui.qs.tiles.AirplaneModeTile;
+import com.android.systemui.qs.tiles.AmbientDisplayTile;
 import com.android.systemui.qs.tiles.AODTile;
 import com.android.systemui.qs.tiles.BatterySaverTile;
 import com.android.systemui.qs.tiles.BluetoothTile;
 import com.android.systemui.qs.tiles.CaffeineTile;
 import com.android.systemui.qs.tiles.CastTile;
 import com.android.systemui.qs.tiles.CellularTile;
+import com.android.systemui.qs.tiles.CPUInfoTile;
+import com.android.systemui.qs.tiles.CameraTile;
 import com.android.systemui.qs.tiles.ColorInversionTile;
+import com.android.systemui.qs.tiles.CompassTile;
 import com.android.systemui.qs.tiles.DataSaverTile;
 import com.android.systemui.qs.tiles.DndTile;
+import com.android.systemui.qs.tiles.AlarmTile;
+import com.android.systemui.qs.tiles.CallTile;
+import com.android.systemui.qs.tiles.CalendarTile;
 import com.android.systemui.qs.tiles.ExpandedDesktopTile;
 import com.android.systemui.qs.tiles.FlashlightTile;
+import com.android.systemui.qs.tiles.LiquidTile;
 import com.android.systemui.qs.tiles.HeadsUpTile;
 import com.android.systemui.qs.tiles.GamingModeTile;
 import com.android.systemui.qs.tiles.HotspotTile;
@@ -42,16 +51,24 @@ import com.android.systemui.qs.tiles.HWKeysTile;
 import com.android.systemui.qs.tiles.IntentTile;
 import com.android.systemui.qs.tiles.LocationTile;
 import com.android.systemui.qs.tiles.LteTile;
+import com.android.systemui.qs.tiles.NavBarTile;
 import com.android.systemui.qs.tiles.NfcTile;
 import com.android.systemui.qs.tiles.NightDisplayTile;
+import com.android.systemui.qs.tiles.OnTheGoTile;
 import com.android.systemui.qs.tiles.RebootTile;
 import com.android.systemui.qs.tiles.RotationLockTile;
 import com.android.systemui.qs.tiles.SoundTile;
+import com.android.systemui.qs.tiles.ScreenrecordTile;
 import com.android.systemui.qs.tiles.ScreenshotTile;
 import com.android.systemui.qs.tiles.ScreenStabilizationTile;
+import com.android.systemui.qs.tiles.CalcTile;
+import com.android.systemui.qs.tiles.SmartPixelsTile;
+import com.android.systemui.qs.tiles.SleepScreenTile;
 import com.android.systemui.qs.tiles.SyncTile;
 import com.android.systemui.qs.tiles.UsbTetherTile;
 import com.android.systemui.qs.tiles.UserTile;
+import com.android.systemui.qs.tiles.VolumeTile;
+import com.android.systemui.qs.tiles.WeatherTile;
 import com.android.systemui.qs.tiles.WifiTile;
 import com.android.systemui.qs.tiles.WorkModeTile;
 import com.android.systemui.qs.QSTileHost;
@@ -137,6 +154,40 @@ public class QSFactoryImpl implements QSFactory {
                 return new ExpandedDesktopTile(mHost);
             case "gaming":
                 return new GamingModeTile(mHost);
+            case "screenrecord":
+                return new ScreenrecordTile(mHost);
+            case "ambient_display":
+                return new AmbientDisplayTile(mHost);
+            case "adb_network":
+                return new AdbOverNetworkTile(mHost);
+            case "weather":
+                return new WeatherTile(mHost);
+            case "alarm":
+                return new AlarmTile(mHost);
+            case "calc":
+                return new CalcTile(mHost);
+            case "cpuinfo":
+                return new CPUInfoTile(mHost);
+            case "calendar":
+                return new CalendarTile(mHost);
+            case "call":
+                return new CallTile(mHost);
+            case "camera":
+                return new CameraTile(mHost);
+            case "compass":
+                return new CompassTile(mHost);
+            case "liquid":
+                return new LiquidTile(mHost);
+            case "navbar":
+                return new NavBarTile(mHost);
+            case "onthego":
+                return new OnTheGoTile(mHost);
+            case "sleepscreen":
+                return new SleepScreenTile(mHost);
+            case "smartpixels":
+                return new SmartPixelsTile(mHost);
+            case "volume_panel":
+                return new VolumeTile(mHost);
         }
 
         // Intent tiles.

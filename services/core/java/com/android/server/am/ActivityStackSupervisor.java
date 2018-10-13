@@ -3575,12 +3575,16 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
                 continue;
             }
             // The display is awake now, so clean up the going to sleep list.
-            for (Iterator<ActivityRecord> it = mGoingToSleepActivities.iterator(); it.hasNext(); ) {
-                final ActivityRecord r = it.next();
+            ArrayList<ActivityRecord> toBeRemove = new ArrayList<ActivityRecord>();
+            for (int i = 0; i < mGoingToSleepActivities.size(); i++) {
+                final ActivityRecord r = mGoingToSleepActivities.get(i);
                 if (r.getDisplayId() == display.mDisplayId) {
-                    it.remove();
+                    toBeRemove.add(r);
                 }
             }
+
+            for (final ActivityRecord r: toBeRemove) mGoingToSleepActivities.remove(r);
+            toBeRemove= null;
         }
     }
 
@@ -4423,7 +4427,6 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
         final int numTasks = tasks.size();
         int[] taskIds = new int[numTasks];
         String[] taskNames = new String[numTasks];
-        Rect[] taskBounds = new Rect[numTasks];
         int[] taskUserIds = new int[numTasks];
         for (int i = 0; i < numTasks; ++i) {
             final TaskRecord task = tasks.get(i);
@@ -4432,13 +4435,10 @@ public class ActivityStackSupervisor extends ConfigurationContainer implements D
                     : task.realActivity != null ? task.realActivity.flattenToString()
                     : task.getTopActivity() != null ? task.getTopActivity().packageName
                     : "unknown";
-            taskBounds[i] = new Rect();
-            task.getWindowContainerBounds(taskBounds[i]);
             taskUserIds[i] = task.userId;
         }
         info.taskIds = taskIds;
         info.taskNames = taskNames;
-        info.taskBounds = taskBounds;
         info.taskUserIds = taskUserIds;
 
         final ActivityRecord top = stack.topRunningActivityLocked();
