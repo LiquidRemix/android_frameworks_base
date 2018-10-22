@@ -2248,5 +2248,5 @@
     <!-- Name for a quick settings tile, used only by platform developers, to extract the SystemUI process memory and send it to another
          app for debugging. Will not be seen by users. [CHAR LIMIT=20] -->
     <string name="heap_dump_tile_name">Dump SysUI Heap</string>
-
+    <string name="tuner_volte_title">VoLTE</string>
 </resources>
