@@ -5414,6 +5414,13 @@ public final class Settings {
         public static final String FLING_PULSE_LAVALAMP_COLOR_TO = "fling_lavalamp_color_to";
 
         /**
+         * Fling pulse bars smoothing
+         *
+         * @hide
+         */
+        public static final String FLING_PULSE_SMOOTHING_ENABLED = "fling_pulse_smoothing_enabled";
+
+        /**
          * Force expanded notifications on all apps that support it.
          * @hide
          */
