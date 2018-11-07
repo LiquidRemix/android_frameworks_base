@@ -5421,6 +5421,12 @@ public final class Settings {
         public static final String FLING_PULSE_SMOOTHING_ENABLED = "fling_pulse_smoothing_enabled";
 
         /**
+         * Pulse Fading units opacity
+         * @hide
+         */
+        public static final String PULSE_FADING_BLOCKS_OPACITY = "pulse_fading_blocks_opacity";
+
+        /**
          * Force expanded notifications on all apps that support it.
          * @hide
          */
@@ -5801,10 +5807,6 @@ public final class Settings {
          */
         public static final String RECENTS_LAYOUT_STYLE  = "recents_layout_style";
 
-        /** @hide */
-        public static final Validator RECENTS_COMPONENT_VALIDATOR =
-                new SettingsValidators.InclusiveIntegerRangeValidator(0, 1);
-                
         /**
          * Whether to display app circle sidebar
          * @hide
@@ -6177,7 +6179,6 @@ public final class Settings {
             USE_OLD_MOBILETYPE,
             NOTIFICATION_SOUND_VIB_SCREEN_ON,
             STATUSBAR_HIDE_NOTCH,
-            RECENTS_COMPONENT,
             ONE_HAND_MODE_ENABLED,
             STATUSBAR_SHOW_WIFI_ACTIVITY,
             STATUS_BAR_SHOW_TICKER,
@@ -6335,7 +6336,6 @@ public final class Settings {
             PRIVATE_SETTINGS.add(QS_TILE_STYLE);
             PRIVATE_SETTINGS.add(STATUSBAR_HIDE_NOTCH);
             PRIVATE_SETTINGS.add(TOAST_ICON);
-            PRIVATE_SETTINGS.add(RECENTS_COMPONENT);
             PRIVATE_SETTINGS.add(HIDE_LOCKSCREEN_STATUS_BAR);
             PRIVATE_SETTINGS.add(HIDE_LOCKSCREEN_INDICATOR_DISPLAY);
             PRIVATE_SETTINGS.add(ONE_HAND_MODE_ENABLED);
@@ -6479,7 +6479,6 @@ public final class Settings {
             VALIDATORS.put(USE_OLD_MOBILETYPE, USE_OLD_MOBILETYPE_VALIDATOR);
             VALIDATORS.put(NOTIFICATION_SOUND_VIB_SCREEN_ON, NOTIFICATION_SOUND_VIB_SCREEN_ON_VALIDATOR);
             VALIDATORS.put(STATUSBAR_HIDE_NOTCH, STATUSBAR_HIDE_NOTCH_VALIDATOR);
-            VALIDATORS.put(RECENTS_COMPONENT,RECENTS_COMPONENT_VALIDATOR);
             VALIDATORS.put(ONE_HAND_MODE_ENABLED, ONE_HAND_MODE_ENABLED_VALIDATOR);
             VALIDATORS.put(STATUSBAR_SHOW_WIFI_ACTIVITY, STATUSBAR_SHOW_WIFI_ACTIVITY_VALIDATOR);
             VALIDATORS.put(AMBIENT_RECOGNITION, AMBIENT_RECOGNITION_VALIDATOR);
@@ -10287,12 +10286,6 @@ public final class Settings {
         public static final Validator STATUS_BAR_BATTERY_STYLE_VALIDATOR =
                 new SettingsValidators.InclusiveIntegerRangeValidator(0, 4);
 
-        /**
-         * Whether to display the ADB notification.
-         * @hide
-         */
-        public static final String ADB_NOTIFY = "adb_notify";
-
         /** 
          * Whether to vibrate when quick settings tile is pressed.
          * @hide
@@ -10384,13 +10377,6 @@ public final class Settings {
          * @hide
          */
         public static final String EDGE_GESTURES_BACK_SHOW_UI_FEEDBACK = "edge_gestures_back_show_ui_feedback";
-
-        /**
-         * Force authorize Substratum (or equivalent) frontend calling packages by ThemeInterfacer
-         * The value is boolean (1 or 0).
-         * @hide
-         */
-        public static final String FORCE_AUTHORIZE_SUBSTRATUM_PACKAGES = "force_authorize_substratum_packages";
 
 	    /**
 	     * @hide
