@@ -268,4 +268,8 @@
   <java-symbol type="drawable" name="weather_sunny" />
   <java-symbol type="drawable" name="weather_thunderstorms" />
   <java-symbol type="drawable" name="weather_windy" />
+  
+  <!-- Icon packs -->
+  <java-symbol type="drawable" name="adaptive_icon_drawable_wrapper" />
+
 </resources>
