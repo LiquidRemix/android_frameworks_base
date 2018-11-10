@@ -251,6 +251,9 @@
     <!-- screenrecord -->
     <uses-permission android:name="android.permission.ACCESS_SURFACE_FLINGER" />
 
+    <!-- Weather on lockscreen -->
+    <uses-permission android:name="com.android.providers.weather.READ_WEATHER" />
+
     <application
         android:name=".SystemUIApplication"
         android:persistent="true"
