@@ -195,7 +195,7 @@ public class KeyguardSliceProvider extends SliceProvider implements
 
     private WeatherClient mWeatherClient;
     private WeatherClient.WeatherInfo mWeatherInfo;
-    private boolean useMetricUnit;
+    private boolean useImperialUnit;
 
     protected void addWeather(ListBuilder builder) {
         if (!WeatherClient.isAvailable(getContext()) || mWeatherInfo == null || mWeatherInfo.getStatus() != WeatherClient.WEATHER_UPDATE_SUCCESS) {
@@ -207,9 +207,9 @@ public class KeyguardSliceProvider extends SliceProvider implements
         }
         int temperatureMetric = mWeatherInfo.getTemperature(true);
         int temperatureImperial = mWeatherInfo.getTemperature(false);
-        String temperatureText = useMetricUnit ?
-                                 Integer.toString(temperatureMetric) + "°C" :
-                                 Integer.toString(temperatureImperial) + "°F";
+        String temperatureText = useImperialUnit ?
+                                 Integer.toString(temperatureImperial) + "°F" :
+                                 Integer.toString(temperatureMetric) + "°C";
         Icon conditionIcon = Icon.createWithResource(getContext(), mWeatherInfo.getWeatherConditionImage());
         RowBuilder weatherRowBuilder = new RowBuilder(builder, mWeatherUri)
                 .setTitle(temperatureText)
@@ -246,7 +246,7 @@ public class KeyguardSliceProvider extends SliceProvider implements
         }
 
         public void updateLockscreenUnit() {
-            useMetricUnit = Settings.System.getIntForUser(mContentResolver, Settings.System.WEATHER_LOCKSCREEN_UNIT, 0, UserHandle.USER_CURRENT) == 0;
+            useImperialUnit = Settings.System.getIntForUser(mContentResolver, Settings.System.WEATHER_LOCKSCREEN_UNIT, 1, UserHandle.USER_CURRENT) != 0;
         }
     }
 
