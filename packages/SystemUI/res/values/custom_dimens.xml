@@ -49,9 +49,6 @@
     <!-- Height of the status bar header bar -->
     <dimen name="status_bar_header_height">130dp</dimen>
 
-    <!-- Keyguard weather image size -->
-    <dimen name="current_weather_image_size">16dp</dimen>
-
     <!-- Burn-in protection -->
     <dimen name="horizontal_max_swift">3.0dp</dimen>
     <dimen name="vertical_max_swift">1.0dp</dimen>
