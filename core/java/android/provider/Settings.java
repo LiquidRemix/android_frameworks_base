@@ -5194,26 +5194,6 @@ public final class Settings {
         public static final String BATTERY_BAR_BATTERY_LOW_COLOR_WARNING = "battery_bar_battery_low_color_warning";
 
         /**
-         * Change OmniJaws icon pack
-         *
-         * @hide
-         */
-        public static final String OMNIJAWS_WEATHER_ICON_PACK = "omnijaws_weather_icon_pack";
-
-        /** @hide */
-        private static final Validator OMNIJAWS_WEATHER_ICON_PACK_VALIDATOR =
-                ANY_STRING_VALIDATOR;
-
-        /**
-         * @hide
-         */
-        public static final String OMNI_LOCKSCREEN_WEATHER_ENABLED = "lockscreen_weather_enabled";
-
-        /** @hide */
-        private static final Validator OMNI_LOCKSCREEN_WEATHER_ENABLED_VALIDATOR =
-                BOOLEAN_VALIDATOR;
-
-        /**
          * @hide
          */
         public static final String BATTERY_BAR_HIGH_COLOR = "battery_bar_high_color";
@@ -5681,18 +5661,6 @@ public final class Settings {
          * @hide
          */
         public static final String LOCK_HIDE_STATUS_BAR = "lockscreen_hide_status_bar";
-
-        /**
-         * Status bar weather temperature
-         * 0: Hide the temperature
-         * 1: Display the temperature with scale and image
-         * 2: Display the temperature without scale and with image
-         * 3: Display the temparature with scale and without image
-         * 4: Display the temperature without scale and without image
-         * 5: Display the temperature image
-         * @hide
-         */
-        public static final String STATUS_BAR_SHOW_WEATHER_TEMP = "statusbar_show_weather_temp";
 
         /**
          * Whether the proximity sensor will adjust call to speaker
@@ -6250,10 +6218,7 @@ public final class Settings {
             OMNI_BUTTON_EXTRA_KEY_MAPPING,
             OMNI_DEVICE_PROXI_CHECK_ENABLED,
             OMNI_DEVICE_FEATURE_SETTINGS,
-            OMNIJAWS_WEATHER_ICON_PACK,
             STATUSBAR_CLOCK_DATE_POSITION,
-            OMNIJAWS_WEATHER_ICON_PACK,
-            OMNI_LOCKSCREEN_WEATHER_ENABLED,
             BURN_IN_PROTECTION,
             BURN_IN_PROTECTION_INTERVAL,
             USE_OLD_MOBILETYPE,
@@ -6406,8 +6371,6 @@ public final class Settings {
             PRIVATE_SETTINGS.add(SCREENSHOT_DEFAULT_MODE);
             PRIVATE_SETTINGS.add(LOCKSCREEN_ROTATION);
             PRIVATE_SETTINGS.add(MUTE_ANNOYING_NOTIFICATIONS_THRESHOLD);
-            PRIVATE_SETTINGS.add(OMNIJAWS_WEATHER_ICON_PACK);
-            PRIVATE_SETTINGS.add(OMNI_LOCKSCREEN_WEATHER_ENABLED);
             PRIVATE_SETTINGS.add(BURN_IN_PROTECTION);
             PRIVATE_SETTINGS.add(BURN_IN_PROTECTION_INTERVAL);
             PRIVATE_SETTINGS.add(USE_OLD_MOBILETYPE);
@@ -6555,9 +6518,6 @@ public final class Settings {
             VALIDATORS.put(OMNI_DEVICE_PROXI_CHECK_ENABLED, OMNI_DEVICE_PROXI_CHECK_ENABLED_VALIDATOR);
             VALIDATORS.put(OMNI_DEVICE_FEATURE_SETTINGS, OMNI_DEVICE_FEATURE_SETTINGS_VALIDATOR);
             VALIDATORS.put(MUTE_ANNOYING_NOTIFICATIONS_THRESHOLD, MUTE_ANNOYING_NOTIFICATIONS_THRESHOLD_VALIDATOR);
-            VALIDATORS.put(OMNIJAWS_WEATHER_ICON_PACK, OMNIJAWS_WEATHER_ICON_PACK_VALIDATOR);
-            VALIDATORS.put(OMNI_LOCKSCREEN_WEATHER_ENABLED,
-                    OMNI_LOCKSCREEN_WEATHER_ENABLED_VALIDATOR);
             VALIDATORS.put(BURN_IN_PROTECTION, BURN_IN_PROTECTION_VALIDATOR);
             VALIDATORS.put(BURN_IN_PROTECTION_INTERVAL, BURN_IN_PROTECTION_INTERVAL_VALIDATOR);
             VALIDATORS.put(USE_OLD_MOBILETYPE, USE_OLD_MOBILETYPE_VALIDATOR);
