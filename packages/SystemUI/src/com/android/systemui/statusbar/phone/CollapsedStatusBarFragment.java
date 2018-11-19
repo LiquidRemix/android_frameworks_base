@@ -167,10 +167,12 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         mWeatherImageView = mStatusBar.findViewById(R.id.weather_image);
         updateLogoSettings(false);
         showSystemIconArea(false);
+	    updateSettings(false);
         initEmergencyCryptkeeperText();
+	    animateHide(mClockView, false, false);
         initOperatorName();
         mSettingsObserver.observe();
-        updateSettings(false);
+        updateSettings(true);
     }
 
     @Override
