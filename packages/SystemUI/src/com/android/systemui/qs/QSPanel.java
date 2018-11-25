@@ -27,11 +27,10 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.annotation.Nullable;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
+import android.content.ContentResolver;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.database.ContentObserver;
 import android.metrics.LogMaker;
 import android.net.Uri;
 import android.os.Handler;
@@ -40,6 +39,8 @@ import android.os.UserHandle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.os.Handler;
+import android.os.Message;
 import android.service.quicksettings.Tile;
 import android.util.AttributeSet;
 import android.view.animation.AccelerateInterpolator;
@@ -52,7 +53,7 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.ImageView; 
 import android.widget.LinearLayout;
 
 import com.android.internal.logging.MetricsLogger;
@@ -79,22 +80,19 @@ import java.util.Collection;
 /** View that represents the quick settings tile panel (when expanded/pulled down). **/
 public class QSPanel extends LinearLayout implements Tunable, Callback, BrightnessMirrorListener {
 
+    public static final String QS_SHOW_BRIGHTNESS = "qs_show_brightness";
     public static final String QS_SHOW_HEADER = "qs_show_header";
     public static final String QS_BRIGHTNESS_POSITION_BOTTOM = "qs_brightness_position_bottom";
 
     protected final Context mContext;
     protected final ArrayList<TileRecord> mRecords = new ArrayList<>();
     protected final View mBrightnessView;
-    protected final ImageView mBrightnessIcon;
     private final H mHandler = new H();
     private final MetricsLogger mMetricsLogger = Dependency.get(MetricsLogger.class);
     private final QSTileRevealController mQsTileRevealController;
 
     protected boolean mExpanded;
     protected boolean mListening;
-
-    private SettingObserver mSettingObserver;
-    private boolean mShowBrightnessSlider = true;
 
     private QSDetail.Callback mCallback;
     private BrightnessController mBrightnessController;
@@ -125,18 +123,15 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
         super(context, attrs);
         mContext = context;
 
-        mSettingObserver = new SettingObserver(new Handler(context.getMainLooper()));
-
         final ContentResolver resolver = context.getContentResolver();
 
         mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+        
         setOrientation(VERTICAL);
 
         mBrightnessView = LayoutInflater.from(mContext).inflate(
             R.layout.quick_settings_brightness_dialog, this, false);
         addView(mBrightnessView);
-
-        mBrightnessIcon = (ImageView) findViewById(R.id.brightness_icon);
 
         mTileLayout = (QSTileLayout) LayoutInflater.from(mContext).inflate(
                 R.layout.qs_paged_tile_layout, this, false);
@@ -159,10 +154,8 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
 
         updateResources();
 
-        ImageView brightnessIcon = (ImageView) mBrightnessView.findViewById(R.id.brightness_icon);
-        brightnessIcon.setVisibility(View.VISIBLE);
-        mBrightnessController = new BrightnessController(context,
-                brightnessIcon,
+        mBrightnessController = new BrightnessController(getContext(),
+                findViewById(R.id.brightness_icon),
                 findViewById(R.id.brightness_slider));
 
         ImageView mMinBrightness = mBrightnessView.findViewById(R.id.brightness_left);
@@ -238,9 +231,9 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        mSettingObserver.observe();
-        mSettingObserver.update();
         final TunerService tunerService = Dependency.get(TunerService.class);
+        tunerService.addTunable(this, QS_SHOW_BRIGHTNESS);
+
         tunerService.addTunable(this, QS_BRIGHTNESS_POSITION_BOTTOM);
         if (mHost != null) {
             setTiles(mHost.getTiles());
@@ -272,7 +265,9 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
 
     @Override
     public void onTuningChanged(String key, String newValue) {
-        // No tunings for you.
+        if (QS_SHOW_BRIGHTNESS.equals(key)) {
+            updateViewVisibilityForTuningValue(mBrightnessView, newValue);
+        }
         if (QS_BRIGHTNESS_POSITION_BOTTOM.equals(key)) {
             if (newValue == null || Integer.parseInt(newValue) == 0) {
                 removeView(mBrightnessView);
@@ -312,18 +307,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
             }
         }
         return mHost.createTile(subPanel);
-    }
-
-    private void setBrightnessIcon() {
-        boolean brightnessIconEnabled = Settings.System.getIntForUser(
-            mContext.getContentResolver(), Settings.System.QS_SHOW_BRIGHTNESS_ICON,
-                0, UserHandle.USER_CURRENT) == 1;
-        if (mShowBrightnessSlider) {
-            mBrightnessIcon.setVisibility(brightnessIconEnabled ? View.VISIBLE : View.GONE);
-        } else {
-            mBrightnessIcon.setVisibility(View.GONE);
-        }
-        updateResources();
     }
 
     public void setBrightnessMirror(BrightnessMirrorController c) {
@@ -476,7 +459,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
                 mBrightnessController.unregisterCallbacks();
             }
         }
-        setBrightnessIcon();
     }
 
     public void refreshAllTiles() {
@@ -535,33 +517,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
 
     protected boolean shouldShowDetail() {
         return mExpanded;
-    }
-
-    private final class SettingObserver extends ContentObserver {
-        public SettingObserver(Handler handler) {
-            super(handler);
-        }
-
-         void observe() {
-            ContentResolver resolver = mContext.getContentResolver();
-            resolver.registerContentObserver(Settings.Secure.getUriFor(
-                    Settings.Secure.QS_SHOW_BRIGHTNESS_SLIDER),
-                    false, this, UserHandle.USER_ALL);
-            update();
-        }
-
-        @Override
-        public void onChange(boolean selfChange, Uri uri) {
-            super.onChange(selfChange, uri);
-            update();
-        }
-
-        public void update() {
-            mShowBrightnessSlider = Settings.Secure.getIntForUser(
-            mContext.getContentResolver(), Settings.Secure.QS_SHOW_BRIGHTNESS_SLIDER,
-                1, UserHandle.USER_CURRENT) == 1;
-            mBrightnessView.setVisibility(mShowBrightnessSlider ? View.VISIBLE : View.GONE);
-        }
     }
 
     protected TileRecord addTile(final QSTile tile, boolean collapsedView) {
