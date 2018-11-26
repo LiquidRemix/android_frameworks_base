@@ -260,7 +260,7 @@ public class QSAnimator implements Callback, PageListener, Listener, OnLayoutCha
                 animationBuilder.addFloat(brightness, "alpha", 0, 1);
             }
             mFirstPageDelayedAnimator = animationBuilder.build();
-            float px = 0;
+           float px = 0;
             float py = 1;
             if (tiles.size() <= 3) {
                 px = 1;
