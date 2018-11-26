@@ -17,6 +17,7 @@
 package com.android.internal.statusbar;
 
 import android.content.ComponentName;
+import android.content.Intent;
 import android.graphics.Rect;
 import android.hardware.biometrics.IBiometricPromptReceiver;
 import android.os.Bundle;
@@ -151,6 +152,8 @@ oneway interface IStatusBar
      */
     void toggleCameraFlash();
     void setAutoRotate(boolean enabled);
+
+    // Start SmartNav API
     void toggleRecentApps();
     void toggleSplitScreen();
     void preloadRecentApps();
@@ -158,5 +161,9 @@ oneway interface IStatusBar
     void startAssist(in Bundle args);
     void restartUI();
     void toggleOrientationListener(boolean enable);
+    void screenPinningStateChanged(boolean enabled);
     void leftInLandscapeChanged(boolean isLeft);
+    void toggleFlashlight();
+    void toggleNavigationEditor();
+    void dispatchNavigationEditorResults(in Intent intent);
 }
