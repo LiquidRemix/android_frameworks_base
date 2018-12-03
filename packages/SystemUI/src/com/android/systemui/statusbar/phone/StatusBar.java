@@ -1005,8 +1005,8 @@ public class StatusBar extends SystemUI implements DemoMode,
         Dependency.get(ConfigurationController.class).addCallback(this);
 
         mFlashlightController = Dependency.get(FlashlightController.class);
-	
-        mSbSettingsObserver.observe();
+
+        mLiquidSettingsObserver.observe();
     }
 
     // ================================================================================
