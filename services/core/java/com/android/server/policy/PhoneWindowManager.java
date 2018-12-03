@@ -3343,8 +3343,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 Settings.Secure.NAVIGATION_BAR_VISIBLE,
                 ActionUtils.hasNavbarByDefault(mContext) ? 1 : 0,
                 UserHandle.USER_CURRENT) == 1;
-        if (doShowNavbar != mNavbarVisible) {
-            mNavbarVisible = doShowNavbar;
+        if (doShowNavbar != mHasNavigationBar) {
+            mHasNavigationBar = doShowNavbar;
         }
         updateNavigationBarSize();
 
