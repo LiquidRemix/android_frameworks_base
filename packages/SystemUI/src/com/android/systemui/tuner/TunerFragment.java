@@ -99,7 +99,7 @@ public class TunerFragment extends PreferenceFragment {
 
         Preference preference = findPreference(KEY_QS_SHOW_FUN);
         if (preference != null) {
-            if (!SystemUIUtils.isXMasFunEnabled()) {
+            if (!SystemUIUtils.isNewYearsFunEnabled()) {
                 ((PreferenceScreen) findPreference(KEY_QS_CATEGORY)).removePreference(preference);
             }
         }
@@ -107,7 +107,7 @@ public class TunerFragment extends PreferenceFragment {
         final Preference ts = findPreference(KEY_QS_FORCE_SHOW_FUN);
         ts.setVisible(false);
         if (p != null && ts != null) {
-            if (!SystemUIUtils.isXMasFunEnabled()) {
+            if (!SystemUIUtils.isNewYearsFunEnabled()) {
                 p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
