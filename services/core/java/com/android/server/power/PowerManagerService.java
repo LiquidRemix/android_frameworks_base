@@ -847,7 +847,7 @@ public final class PowerManagerService extends SystemService
             }
 
             // Initialize proximity sensor
-            mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
+            mSensorManager = mContext.getSystemService(SensorManager.class);
             mProximitySensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
 
             // Go.
@@ -1000,7 +1000,7 @@ public final class PowerManagerService extends SystemService
         mProximityTimeOut = resources.getInteger(
                 com.android.internal.R.integer.config_proximityCheckTimeout);
         if (mProximityWakeSupported) {
-            mProximityWakeLock = ((PowerManager) mContext.getSystemService(Context.POWER_SERVICE))
+            mProximityWakeLock = mContext.getSystemService(PowerManager.class)
                     .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ProximityWakeLock");
         }
     }
@@ -1065,11 +1065,12 @@ public final class PowerManagerService extends SystemService
                 Settings.System.BUTTON_BRIGHTNESS, mButtonBrightnessSettingDefault,
                 UserHandle.USER_CURRENT);
 
-        mProximityWakeEnabled = Settings.System.getInt(resolver,
+        mProximityWakeEnabled = (Settings.System.getIntForUser(resolver,
                 Settings.System.PROXIMITY_ON_WAKE,
-                mProximityWakeEnabledByDefaultConfig ? 1 : 0) == 1;
-        
-	mButtonBacklightOnTouchOnly = Settings.System.getIntForUser(
+                mProximityWakeEnabledByDefaultConfig ? 1 : 0,
+                UserHandle.USER_CURRENT) != 0);
+
+	    mButtonBacklightOnTouchOnly = Settings.System.getIntForUser(
                 mContext.getContentResolver(), Settings.System.BUTTON_BACKLIGHT_ON_TOUCH_ONLY,
                 0, UserHandle.USER_CURRENT) != 0;
 
@@ -5085,10 +5086,10 @@ public final class PowerManagerService extends SystemService
             // A message is already queued
             return;
         }
-         final TelephonyManager tm =
+        final TelephonyManager tm =
                 (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
         final boolean hasIncomingCall = tm.getCallState() == TelephonyManager.CALL_STATE_RINGING;
-         if (mProximityWakeSupported && mProximityWakeEnabled
+        if (mProximityWakeSupported && mProximityWakeEnabled
                 && mProximitySensor != null && !hasIncomingCall) {
             final Message msg = mHandler.obtainMessage(MSG_WAKE_UP);
             msg.obj = r;
