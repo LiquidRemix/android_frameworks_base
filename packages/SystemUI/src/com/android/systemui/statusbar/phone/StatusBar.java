@@ -5624,6 +5624,9 @@ public class StatusBar extends SystemUI implements DemoMode,
                 uri.equals(Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS_MODE))) {
                 setBrightnessSlider();
             } else if (uri.equals(Settings.System.getUriFor(
+                Settings.System.DOUBLE_TAP_SLEEP_GESTURE))) {
+                setStatusDoubleTapToSleep();
+            } else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.UI_STYLE))) {
                 stockUIStyle();
                 updateUIStyle();
