@@ -1132,21 +1132,14 @@ public class StatusBar extends SystemUI implements DemoMode,
         mBatteryController.addCallback(new BatteryStateChangeCallback() {
             @Override
             public void onPowerSaveChanged(boolean isPowerSave) {
+                mIsOnPowerSaveMode = isPowerSave;
                 mHandler.post(mCheckBarModes);
                 if (mDozeServiceHost != null) {
                     mDozeServiceHost.firePowerSaveChanged(isPowerSave);
                 }
-
-		boolean BatterySaverDarkModeState = Settings.System.getIntForUser(mContext.getContentResolver(),
-                	Settings.System.BATTERY_SAVER_DARK_MODE, 0,
-                	UserHandle.USER_CURRENT) == 1;
-
-                if (NIGHT_MODE_IN_BATTERY_SAVER == BatterySaverDarkModeState & isPowerSave)
-                    mContext.getSystemService(UiModeManager.class)
-			    .setNightMode(UiModeManager.MODE_NIGHT_YES);
-		else
-		    mContext.getSystemService(UiModeManager.class)
-			    .setNightMode(UiModeManager.MODE_NIGHT_NO);
+                if (NIGHT_MODE_IN_BATTERY_SAVER) {
+                    updateTheme(true);
+                }
             }
 
             @Override
@@ -4657,23 +4650,25 @@ public class StatusBar extends SystemUI implements DemoMode,
      * Switches theme from light to dark and vice-versa.
      */
     protected void updateTheme() {
+        updateTheme(false);
+    }
+
+    protected void updateTheme(boolean fromPowerSaveCallback) {
         final boolean inflated = mStackScroller != null && mStatusBarWindowManager != null;
-        boolean useBlackTheme = false;
+        final UiModeManager umm = mContext.getSystemService(UiModeManager.class);
         boolean useDarkTheme = false;
+        boolean useBlackTheme = false;
 
         haltTicker();
 
         if (mCurrentTheme == 0) {
-           // The system wallpaper defines if QS should be light or dark.
-            WallpaperColors systemColors = mColorExtractor
-                    .getWallpaperColors(WallpaperManager.FLAG_SYSTEM);
-            final boolean wallpaperWantsDarkTheme = systemColors != null
-                    && (systemColors.getColorHints() & WallpaperColors.HINT_SUPPORTS_DARK_THEME) != 0;
-	        final Configuration config = mContext.getResources().getConfiguration();
-            final boolean nightModeWantsDarkTheme = DARK_THEME_IN_NIGHT_MODE
-                    && (config.uiMode & Configuration.UI_MODE_NIGHT_MASK)
-                        == Configuration.UI_MODE_NIGHT_YES;
-            useDarkTheme = wallpaperWantsDarkTheme || nightModeWantsDarkTheme;
+            // The system wallpaper defines if QS should be light or dark.
+            final WallpaperColors systemColors = mColorExtractor.getWallpaperColors(WallpaperManager.FLAG_SYSTEM);
+            boolean darkThemeNeeded = systemColors != null && (systemColors.getColorHints() & WallpaperColors.HINT_SUPPORTS_DARK_THEME) != 0;
+            if ((fromPowerSaveCallback || !darkThemeNeeded) && DARK_THEME_IN_NIGHT_MODE && mIsOnPowerSaveMode){
+                darkThemeNeeded = true;
+            }
+            useDarkTheme = darkThemeNeeded;
             // Check for black and white accent so we don't end up
             // with white on white or black on black
             unfuckBlackWhiteAccent();
@@ -4686,6 +4681,7 @@ public class StatusBar extends SystemUI implements DemoMode,
             // Check for black and white accent so we don't end up
             // with white on white or black on black
             unfuckBlackWhiteAccent();
+            umm.setNightMode(useDarkTheme ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO);
             ThemeAccentUtils.setLightDarkTheme(mOverlayManager, mLockscreenUserManager.getCurrentUserId(), useDarkTheme);
             mNotificationPanel.setLockscreenClockTheme(useDarkTheme);
         }
