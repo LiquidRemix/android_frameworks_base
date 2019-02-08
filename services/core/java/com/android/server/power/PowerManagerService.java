@@ -237,6 +237,12 @@ public final class PowerManagerService extends SystemService
 
     // Persistent property for last reboot reason
     private static final String LAST_REBOOT_PROPERTY = "persist.sys.boot.reason";
+    
+    // Add button light timeout
+    private static final int BUTTON_ON_DURATION = 5 * 1000;
+    
+    // File location for last reboot reason
+    private static final String LAST_REBOOT_LOCATION = "/data/misc/reboot/last_reboot_reason";
 
     private static final float PROXIMITY_NEAR_THRESHOLD = 5.0f;
 
@@ -2130,6 +2136,7 @@ public final class PowerManagerService extends SystemService
                 final long screenOffTimeout = getScreenOffTimeoutLocked(sleepTimeout);
                 final long screenDimDuration = getScreenDimDurationLocked(screenOffTimeout);
                 final boolean userInactiveOverride = mUserInactiveOverrideFromWindowManager;
+		final int screenBrightness = mScreenBrightnessSettingDefault;
                 final long nextProfileTimeout = getNextProfileTimeoutLocked(now);
                 final PocketManager pocketManager = (PocketManager) mContext.getSystemService(Context.POCKET_SERVICE);
                 final boolean isDeviceInPocket = pocketManager != null && pocketManager.isDeviceInPocket();
@@ -2140,7 +2147,13 @@ public final class PowerManagerService extends SystemService
                     nextTimeout = mLastUserActivityTime
                             + screenOffTimeout - screenDimDuration;
                     if (now < nextTimeout) {
-                        mUserActivitySummary = USER_ACTIVITY_SCREEN_BRIGHT;
+                        if (now > mLastUserActivityTime + BUTTON_ON_DURATION) {
+			mButtonsLight.setBrightness(0);
+			} else {
+			mButtonsLight.setBrightness(screenBrightness);
+			nextTimeout = now + BUTTON_ON_DURATION;
+			}
+			
                         if (mWakefulness == WAKEFULNESS_AWAKE) {
                             int buttonBrightness;
                             if (mHardwareKeysDisable) {
@@ -2176,7 +2189,8 @@ public final class PowerManagerService extends SystemService
                             }
                         }
                     } else {
-                        nextTimeout = mLastUserActivityTime + screenOffTimeout;
+                        mUserActivitySummary = USER_ACTIVITY_SCREEN_BRIGHT;
+			nextTimeout = mLastUserActivityTime + screenOffTimeout;
                         if (now < nextTimeout) {
                             mUserActivitySummary = USER_ACTIVITY_SCREEN_DIM;
                             if (mWakefulness == WAKEFULNESS_AWAKE) {
