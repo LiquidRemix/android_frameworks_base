@@ -149,7 +149,7 @@ static void NativeVerifySystemIdmaps(JNIEnv* /*env*/, jclass /*clazz*/) {
       }
 
       // Generic idmap parameters
-      const char* argv[8];
+      const char* argv[9];
       int argc = 0;
       struct stat st;
 
@@ -179,6 +179,10 @@ static void NativeVerifySystemIdmaps(JNIEnv* /*env*/, jclass /*clazz*/) {
         argv[argc++] = AssetManager::PRODUCT_OVERLAY_DIR;
       }
 
+      if(stat("/system/overlay", &st) == 0) {
+        argv[argc++] = "/system/overlay";
+        }
+      
       // Finally, invoke idmap (if any overlay directory exists)
       if (argc > 5) {
         execv(AssetManager::IDMAP_BIN, (char* const*)argv);
