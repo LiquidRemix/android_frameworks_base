@@ -82,4 +82,11 @@
     <string name="text_clock_units_string_h_eighteen">Eighteen</string>
     <string name="text_clock_units_string_h_nineteen">Nineteen</string>
 
+    <!-- Skeleton string format for displaying the date with number. -->
+    <string name="abbrev_wday_day_no_year">eeeedd</string>
+    <!-- Skeleton string format for displaying the date. -->
+    <string name="abbrev_wday_no_year">eeee</string>
+    <!-- Skeleton string format for displaying the day of the month. -->
+    <string name="abbrev_wday_month_no_year">MMMMd</string>
+
 </resources>
