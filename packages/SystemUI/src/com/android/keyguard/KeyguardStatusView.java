@@ -1078,6 +1078,9 @@ public class KeyguardStatusView extends GridLayout implements
                 mClockView.setGravity(Gravity.CENTER);
                 mClockView.setLineSpacing(0, 0.8f);
                 break;
+            case 7: // custom text clock
+                 params.addRule(RelativeLayout.BELOW, R.id.custom_textclock_view);
+                 break
         }
 
         updateVisibilities();
