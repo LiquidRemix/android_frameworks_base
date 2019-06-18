@@ -863,7 +863,6 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
                     });
                 } else {
                     v.setOnLongClickListener(view -> {
-                        t.click();
                         t.longClick();
                         return true;
                     });
