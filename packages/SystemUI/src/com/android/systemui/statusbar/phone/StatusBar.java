@@ -759,6 +759,7 @@ public class StatusBar extends SystemUI implements DemoMode,
     private VibratorHelper mVibratorHelper;
 
     private boolean mLockscreenMediaMetadata;
+    private boolean mIsOnPowerSaveMode;
 
     @Override
     public void start() {
@@ -1136,15 +1137,16 @@ public class StatusBar extends SystemUI implements DemoMode,
                     mDozeServiceHost.firePowerSaveChanged(isPowerSave);
                 }
 
-		        boolean BatterySaverDarkModeState = Settings.System.getIntForUser(mContext.getContentResolver(),
+		boolean BatterySaverDarkModeState = Settings.System.getIntForUser(mContext.getContentResolver(),
                 	Settings.System.BATTERY_SAVER_DARK_MODE, 0,
                 	UserHandle.USER_CURRENT) == 1;
-                    if (NIGHT_MODE_IN_BATTERY_SAVER == BatterySaverDarkModeState & isPowerSave)
-                        mContext.getSystemService(UiModeManager.class)
-			            .setNightMode(UiModeManager.MODE_NIGHT_YES);
-		            else
-		                mContext.getSystemService(UiModeManager.class)
-			            .setNightMode(UiModeManager.MODE_NIGHT_NO);
+
+                if (NIGHT_MODE_IN_BATTERY_SAVER == BatterySaverDarkModeState & isPowerSave)
+                    mContext.getSystemService(UiModeManager.class)
+			    .setNightMode(UiModeManager.MODE_NIGHT_YES);
+		else
+		    mContext.getSystemService(UiModeManager.class)
+			    .setNightMode(UiModeManager.MODE_NIGHT_NO);
             }
 
             @Override
@@ -5604,6 +5606,7 @@ public class StatusBar extends SystemUI implements DemoMode,
 
         @Override
         public void onChange(boolean selfChange, Uri uri) {
+            super.onChange(selfChange, uri);
             if (uri.equals(Settings.System.getUriFor(
                     Settings.System.HEADS_UP_STOPLIST_VALUES))) {
                 final String stopString = Settings.System.getString(mContext.getContentResolver(),
