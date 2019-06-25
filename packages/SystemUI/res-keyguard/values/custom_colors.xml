@@ -26,7 +26,9 @@
 
     <!-- Sammy accented clock -->
     <color name="sammy_minutes_accent">@*android:color/accent_device_default_light</color>
-    <color name="custom_text_clock_top_color">#f5c887</color>
+    
+    <!-- Q clock -->
+    <color name="custom_text_clock_top_color">@*android:color/accent_device_default_light</color>
 
     <!-- Date styles requires clock -->
     <color name="date_style_system_bg">@*android:color/background_material_dark</color>
