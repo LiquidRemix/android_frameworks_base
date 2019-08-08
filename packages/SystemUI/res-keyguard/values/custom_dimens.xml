@@ -135,9 +135,9 @@
     <dimen name="lock_clock_font_size_120">120dp</dimen>
 
     <!-- Custom text clock -->
-    <dimen name="customtextclock_fontsize">38dp</dimen>
-    <dimen name="custom_clock_left_padding">55dp</dimen>
-    <dimen name="custom_clock_top_margin">62dp</dimen>
+    <dimen name="customtextclock_fontsize">34dp</dimen>
+    <dimen name="custom_clock_left_padding">48dp</dimen>
+    <dimen name="custom_clock_right_padding">6dp</dimen>
 
     <!-- padding for date view -->
     <dimen name="widget_clock_normal_clock_padding">2dp</dimen>
