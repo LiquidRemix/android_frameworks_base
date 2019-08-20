@@ -203,7 +203,6 @@ public class QSContainerImpl extends FrameLayout {
     }
 
     private void setQsBackground() {
-
         if (mSetQsFromResources) {
             mQsBackGround = getContext().getDrawable(R.drawable.qs_background_primary);
         } else {
@@ -212,9 +211,10 @@ public class QSContainerImpl extends FrameLayout {
                 mQsBackGround.setAlpha(mQsBackGroundAlpha);
             }
         }
-        if (mQsBackGround != null && mBackground != null) {
+        if (mQsBackGround != null)
+            mQsBackGround.setAlpha(mQsBackGroundAlpha);
+        if (mQsBackGround != null && mBackground != null)
             mBackground.setBackground(mQsBackGround);
-        }
     }
 
     @Override
