@@ -14,8 +14,6 @@
      limitations under the License.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-
-     <string name="global_action_restart_advanced">Расшир. перезагрузка</string>
      
     <!-- LTE QS Tile -->
     <string name="qs_lte_label">LTE</string>
