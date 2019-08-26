@@ -1,0 +1,1499 @@
+From 8744fc0c7e5bf0039ef24e2069a02a5201c13ecf Mon Sep 17 00:00:00 2001
+From: jhenrique09 <jhenrique09.mcz@hotmail.com>
+Date: Sat, 10 Aug 2019 22:06:22 -0300
+Subject: [PATCH] fwb: Port extended screenshot function from OOS
+
+Signed-off-by: celtare21 <celtare21@gmail.com>
+Change-Id: I856597056cb56d479a7a2c47dfdfc199da4302b8
+---
+
+diff --git a/Android.bp b/Android.bp
+index 742fde4..e1d5007 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -624,6 +624,12 @@
+         "core/java/org/chromium/arc/EventLogTags.logtags",
+ 
+         ":framework-statslog-gen",
++
++        // Long screenshot
++        "core/java/com/android/internal/custom/longshot/ILongScreenshot.aidl",
++        "core/java/com/android/internal/custom/longshot/ILongScreenshotCallback.aidl",
++        "core/java/com/android/internal/custom/longshot/ILongScreenshotListener.aidl",
++        "core/java/com/android/internal/custom/longshot/ILongScreenshotManager.aidl",
+     ],
+ 
+     aidl: {
+diff --git a/core/java/android/app/SystemServiceRegistry.java b/core/java/android/app/SystemServiceRegistry.java
+index c77cb82..8764b80 100644
+--- a/core/java/android/app/SystemServiceRegistry.java
++++ b/core/java/android/app/SystemServiceRegistry.java
+@@ -166,6 +166,8 @@
+ 
+ import java.util.HashMap;
+ 
++import com.android.internal.custom.longshot.LongScreenshotManager;
++
+ /**
+  * Manages all of the system services that can be returned by {@link Context#getSystemService}.
+  * Used by {@link ContextImpl}.
+@@ -1008,6 +1010,15 @@
+                                         Context.DEVICE_IDLE_CONTROLLER));
+                         return new DeviceIdleManager(ctx.getOuterContext(), service);
+                     }});
++
++
++        registerService(Context.LONGSCREENSHOT_SERVICE, LongScreenshotManager.class,
++                new CachedServiceFetcher<LongScreenshotManager>() {
++                    @Override
++                    public LongScreenshotManager createService(ContextImpl ctx)
++                            throws ServiceNotFoundException {
++                        return LongScreenshotManager.getInstance();
++                    }});
+     }
+ 
+     /**
+diff --git a/core/java/android/content/Context.java b/core/java/android/content/Context.java
+index bcbf348..63f2f23 100644
+--- a/core/java/android/content/Context.java
++++ b/core/java/android/content/Context.java
+@@ -4229,6 +4229,12 @@
+     public static final String POCKET_SERVICE = "pocket";
+ 
+     /**
++     * Long screenshot
++     * @hide
++     */
++    public static final String LONGSCREENSHOT_SERVICE = "longshot";
++
++    /**
+      * Determine whether the given permission is allowed for a particular
+      * process and user ID running in the system.
+      *
+diff --git a/core/java/android/view/IWindowManager.aidl b/core/java/android/view/IWindowManager.aidl
+index 1db0efa..c49b114 100644
+--- a/core/java/android/view/IWindowManager.aidl
++++ b/core/java/android/view/IWindowManager.aidl
+@@ -469,4 +469,11 @@
+      * This requires the ONE_HANDED_MODE permission.
+      */
+     void unregisterOneHandedModeListener(IOneHandedModeListener listener);
++
++    /**
++     * Long screenshot
++     * @hide
++     */
++    void takeOPScreenshot(int type, int reason);
++    void stopLongshotConnection();
+ }
+diff --git a/core/java/android/view/View.java b/core/java/android/view/View.java
+index 05eb574..909c3e0 100644
+--- a/core/java/android/view/View.java
++++ b/core/java/android/view/View.java
+@@ -141,6 +141,8 @@
+ import java.util.concurrent.atomic.AtomicInteger;
+ import java.util.function.Predicate;
+ 
++import com.android.internal.custom.longshot.injector.ViewInjector;
++
+ /**
+  * <p>
+  * This class represents the basic building block for user interface components. A View
+@@ -13745,6 +13747,7 @@
+                 || (viewFlags & LONG_CLICKABLE) == LONG_CLICKABLE)
+                 || (viewFlags & CONTEXT_CLICKABLE) == CONTEXT_CLICKABLE;
+ 
++        ViewInjector.View.isInjection = (event.getSource() & 268435456) != 0;
+         if ((viewFlags & ENABLED_MASK) == DISABLED) {
+             if (action == MotionEvent.ACTION_UP && (mPrivateFlags & PFLAG_PRESSED) != 0) {
+                 setPressed(false);
+@@ -13760,6 +13763,22 @@
+             }
+         }
+ 
++        if (action == 0 && isInScrollingContainer() && ViewInjector.View.isInjection) {
++            ViewParent targetView = getParent();
++            while (true) {
++                if (targetView == null || !(targetView instanceof ViewGroup)) {
++                    break;
++                } else if (((ViewGroup) targetView).shouldDelayChildPressedState()) {
++                    int[] position = new int[2];
++                    ((ViewGroup) targetView).getLocationOnScreen(position);
++                    ViewInjector.View.setScrolledViewTop(mContext, position[1]);
++                    break;
++                } else {
++                    targetView = targetView.getParent();
++                }
++            }
++        }
++
+         if (clickable || (viewFlags & TOOLTIP) == TOOLTIP) {
+             switch (action) {
+                 case MotionEvent.ACTION_UP:
+@@ -16284,7 +16303,7 @@
+     protected boolean awakenScrollBars(int startDelay, boolean invalidate) {
+         final ScrollabilityCache scrollCache = mScrollCache;
+ 
+-        if (scrollCache == null || !scrollCache.fadeScrollBars) {
++        if (ViewInjector.View.onAwakenScrollBars(mContext) || scrollCache == null || !scrollCache.fadeScrollBars) {
+             return false;
+         }
+ 
+@@ -24449,6 +24468,7 @@
+ 
+         onOverScrolled(newScrollX, newScrollY, clampedX, clampedY);
+ 
++        ViewInjector.View.onOverScrolled(mContext, clampedY);
+         return clampedX || clampedY;
+     }
+ 
+diff --git a/core/java/android/view/WindowManager.java b/core/java/android/view/WindowManager.java
+index db015d4..96a0717 100644
+--- a/core/java/android/view/WindowManager.java
++++ b/core/java/android/view/WindowManager.java
+@@ -997,6 +997,12 @@
+         public static final int TYPE_APPLICATION_OVERLAY = FIRST_SYSTEM_WINDOW + 38;
+ 
+         /**
++         * Window type: Long screenshot overlay
++         * @hide
++         */
++        public static final int TYPE_SYSTEM_LONGSHOT = FIRST_SYSTEM_WINDOW + 39;
++
++        /**
+          * End of types of system windows.
+          */
+         public static final int LAST_SYSTEM_WINDOW      = 2999;
+diff --git a/core/java/android/widget/ScrollView.java b/core/java/android/widget/ScrollView.java
+index dc70c35..b93f622 100644
+--- a/core/java/android/widget/ScrollView.java
++++ b/core/java/android/widget/ScrollView.java
+@@ -49,6 +49,8 @@
+ 
+ import java.util.List;
+ 
++import com.android.internal.custom.longshot.injector.ScrollViewInjector;
++
+ /**
+  * A view group that allows the view hierarchy placed within it to be scrolled.
+  * Scroll view may have only one direct child placed within it.
+@@ -622,6 +624,8 @@
+         }
+         vtev.offsetLocation(0, mNestedYOffset);
+ 
++        ScrollViewInjector.ScrollView.isInjection = (ev.getSource() & 268435456) != 0;
++
+         switch (actionMasked) {
+             case MotionEvent.ACTION_DOWN: {
+                 if (getChildCount() == 0) {
+@@ -710,12 +714,14 @@
+                             if (!mEdgeGlowBottom.isFinished()) {
+                                 mEdgeGlowBottom.onRelease();
+                             }
++                            ScrollViewInjector.ScrollView.onOverScrolled(mContext, true);
+                         } else if (pulledToY > range) {
+                             mEdgeGlowBottom.onPull((float) deltaY / getHeight(),
+                                     1.f - ev.getX(activePointerIndex) / getWidth());
+                             if (!mEdgeGlowTop.isFinished()) {
+                                 mEdgeGlowTop.onRelease();
+                             }
++                            ScrollViewInjector.ScrollView.onOverScrolled(mContext, true);
+                         }
+                         if (mEdgeGlowTop != null
+                                 && (!mEdgeGlowTop.isFinished() || !mEdgeGlowBottom.isFinished())) {
+diff --git a/core/java/android/widget/Toast.java b/core/java/android/widget/Toast.java
+index b7c9a9b..528e5b7 100644
+--- a/core/java/android/widget/Toast.java
++++ b/core/java/android/widget/Toast.java
+@@ -47,6 +47,8 @@
+ import java.lang.annotation.Retention;
+ import java.lang.annotation.RetentionPolicy;
+ 
++import com.android.internal.custom.longshot.LongScreenshotManagerService;
++
+ /**
+  * A toast is a view containing a quick little message for the user.  The toast class
+  * helps you create and show those.
+@@ -382,7 +384,11 @@
+             params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+             params.format = PixelFormat.TRANSLUCENT;
+             params.windowAnimations = com.android.internal.R.style.Animation_Toast;
+-            params.type = WindowManager.LayoutParams.TYPE_TOAST;
++            if (LongScreenshotManagerService.PACKAGENAME_LONGSHOT.equals(packageName)) {
++                params.type = WindowManager.LayoutParams.TYPE_SYSTEM_LONGSHOT;
++            } else {
++                params.type = WindowManager.LayoutParams.TYPE_TOAST;
++            }
+             params.setTitle("Toast");
+             params.flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                     | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+diff --git a/core/java/com/android/internal/custom/longshot/ILongScreenshot.aidl b/core/java/com/android/internal/custom/longshot/ILongScreenshot.aidl
+new file mode 100644
+index 0000000..379d020
+--- /dev/null
++++ b/core/java/com/android/internal/custom/longshot/ILongScreenshot.aidl
+@@ -0,0 +1,37 @@
++/**
++ * Copyright (C) 2019 The PixelExperience Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.custom.longshot;
++
++import com.android.internal.custom.longshot.ILongScreenshotCallback;
++
++/** @hide */
++interface ILongScreenshot {
++
++    boolean isHandleState();
++
++    boolean isMoveState();
++
++    void notifyScroll(boolean isOverScroll);
++
++    void notifyScrollViewTop(int viewTop);
++
++    void onUnscrollableView();
++
++    void start(in ILongScreenshotCallback callback);
++
++    void stopLongshot();
++}
+diff --git a/core/java/com/android/internal/custom/longshot/ILongScreenshotCallback.aidl b/core/java/com/android/internal/custom/longshot/ILongScreenshotCallback.aidl
+new file mode 100644
+index 0000000..f9060dc
+--- /dev/null
++++ b/core/java/com/android/internal/custom/longshot/ILongScreenshotCallback.aidl
+@@ -0,0 +1,25 @@
++/**
++ * Copyright (C) 2019 The PixelExperience Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.custom.longshot;
++
++/** @hide */
++interface ILongScreenshotCallback {
++
++    void notifyMove();
++
++    void stop();
++}
+diff --git a/core/java/com/android/internal/custom/longshot/ILongScreenshotListener.aidl b/core/java/com/android/internal/custom/longshot/ILongScreenshotListener.aidl
+new file mode 100644
+index 0000000..0e399b3
+--- /dev/null
++++ b/core/java/com/android/internal/custom/longshot/ILongScreenshotListener.aidl
+@@ -0,0 +1,23 @@
++/**
++ * Copyright (C) 2019 The PixelExperience Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.custom.longshot;
++
++/** @hide */
++interface ILongScreenshotListener {
++
++    void onMove();
++}
+diff --git a/core/java/com/android/internal/custom/longshot/ILongScreenshotManager.aidl b/core/java/com/android/internal/custom/longshot/ILongScreenshotManager.aidl
+new file mode 100644
+index 0000000..59aacd8
+--- /dev/null
++++ b/core/java/com/android/internal/custom/longshot/ILongScreenshotManager.aidl
+@@ -0,0 +1,43 @@
++/**
++ * Copyright (C) 2019 The PixelExperience Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.custom.longshot;
++
++import com.android.internal.custom.longshot.ILongScreenshotListener;
++
++/** @hide */
++interface ILongScreenshotManager {
++
++    boolean isLongshotHandleState();
++
++    boolean isLongshotMode();
++
++    boolean isLongshotMoveState();
++
++    void notifyLongshotScroll(boolean isOverScroll);
++
++    void notifyScrollViewTop(int viewTop);
++
++    void onUnscrollableView();
++
++    void registerLongshotListener(in ILongScreenshotListener listener);
++
++    void stopLongshot();
++
++    void takeLongshot(boolean statusBarVisible, boolean navBarVisible);
++
++    void unregisterLongshotListener(in ILongScreenshotListener listener);
++}
+diff --git a/core/java/com/android/internal/custom/longshot/LongScreenshotManager.java b/core/java/com/android/internal/custom/longshot/LongScreenshotManager.java
+new file mode 100644
+index 0000000..5113460
+--- /dev/null
++++ b/core/java/com/android/internal/custom/longshot/LongScreenshotManager.java
+@@ -0,0 +1,125 @@
++package com.android.internal.custom.longshot;
++
++import android.content.Context;
++import android.os.RemoteException;
++import android.os.ServiceManager;
++import android.util.Log;
++
++public final class LongScreenshotManager {
++    public static final String NAVIGATIONBAR_VISIBLE = "navigationbar_visible";
++    public static final String STATUSBAR_VISIBLE = "statusbar_visible";
++    private static final String TAG = "Longshot.Manager";
++    private static LongScreenshotManager sInstance = null;
++    private final ILongScreenshotManager mService = ILongScreenshotManager.Stub.asInterface(ServiceManager.getService(Context.LONGSCREENSHOT_SERVICE));
++
++    private LongScreenshotManager() {
++    }
++
++    public static LongScreenshotManager getInstance() {
++        LongScreenshotManager longScreenshotManager;
++        synchronized (LongScreenshotManager.class) {
++            if (sInstance == null || sInstance.mService == null) {
++                sInstance = new LongScreenshotManager();
++            }
++            longScreenshotManager = sInstance;
++        }
++        return longScreenshotManager;
++    }
++
++    public static LongScreenshotManager peekInstance() {
++        return sInstance;
++    }
++
++    public void takeLongshot(boolean statusBarVisible, boolean navBarVisible) {
++        try {
++            if (mService != null) {
++                mService.takeLongshot(statusBarVisible, navBarVisible);
++            }
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in takeLongshot: ", e);
++        }
++    }
++
++    public void registerLongshotListener(ILongScreenshotListener listener) {
++        try {
++            if (mService != null) {
++                mService.registerLongshotListener(listener);
++            }
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in registerLongshotListener: ", e);
++        }
++    }
++
++    public void unregisterLongshotListener(ILongScreenshotListener listener) {
++        try {
++            if (mService != null) {
++                mService.unregisterLongshotListener(listener);
++            }
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in unregisterLongshotListener: ", e);
++        }
++    }
++
++    public void notifyLongshotScroll(boolean isOverScroll) {
++        try {
++            if (mService != null) {
++                mService.notifyLongshotScroll(isOverScroll);
++            }
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in notifyLongshotScroll: ", e);
++        }
++    }
++
++    public boolean isLongshotMoveState() {
++        try {
++            if (mService != null) {
++                return mService.isLongshotMoveState();
++            }
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in isLongshotMoveState: ", e);
++        }
++        return false;
++    }
++
++    public boolean isLongshotHandleState() {
++        try {
++            if (mService != null) {
++                return mService.isLongshotHandleState();
++            }
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in isLongshotHandleState: ", e);
++        }
++        return false;
++    }
++
++    public boolean isLongshotMode() {
++        try {
++            if (mService != null) {
++                return mService.isLongshotMode();
++            }
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in isLongshotMode: ", e);
++        }
++        return false;
++    }
++
++    public void notifyScrollViewTop(int viewTop) {
++        try {
++            if (mService != null) {
++                mService.notifyScrollViewTop(viewTop);
++            }
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in notifyScrollViewTop: ", e);
++        }
++    }
++
++    public void onUnscrollableView() {
++        try {
++            if (mService != null) {
++                mService.onUnscrollableView();
++            }
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in onUnscrollableView: ", e);
++        }
++    }
++}
+diff --git a/core/java/com/android/internal/custom/longshot/LongScreenshotManagerService.java b/core/java/com/android/internal/custom/longshot/LongScreenshotManagerService.java
+new file mode 100644
+index 0000000..a4c90eb
+--- /dev/null
++++ b/core/java/com/android/internal/custom/longshot/LongScreenshotManagerService.java
+@@ -0,0 +1,195 @@
++package com.android.internal.custom.longshot;
++
++import android.content.ComponentName;
++import android.content.Context;
++import android.content.Intent;
++import android.content.ServiceConnection;
++import android.os.IBinder;
++import android.os.RemoteException;
++import android.os.UserHandle;
++import android.util.Log;
++import android.view.WindowManagerGlobal;
++import java.util.ArrayList;
++import java.util.List;
++
++public class LongScreenshotManagerService extends ILongScreenshotManager.Stub {
++    public static final String PACKAGENAME_LONGSHOT = "org.pixelexperience.screenshot";
++    public static final ComponentName TAKE_SCREENSHOT_COMPONENT = new ComponentName(PACKAGENAME_LONGSHOT, PACKAGENAME_LONGSHOT + ".TakeScreenshotService");
++    private static final ComponentName COMPONENT_LONGSHOT = new ComponentName(PACKAGENAME_LONGSHOT, PACKAGENAME_LONGSHOT + ".LongshotService");
++    private static final String TAG = "Longshot.ManagerService";
++    private static LongScreenshotManagerService sInstance = null;
++    public Context mContext = null;
++    private LongshotConnection mLongshot = new LongshotConnection();
++
++    private class LongshotConnection extends ILongScreenshotCallback.Stub implements ServiceConnection {
++        private List<ILongScreenshotListener> mListeners;
++        public ILongScreenshot mService;
++
++        private LongshotConnection() {
++            mService = null;
++            mListeners = new ArrayList();
++        }
++
++        @Override
++        public void onServiceConnected(ComponentName name, IBinder service) {
++            mService = ILongScreenshot.Stub.asInterface(service);
++            try {
++                mService.start(this);
++            } catch (NullPointerException ignored) {
++            } catch (RemoteException e) {
++                Log.w(TAG, "Remote exception in onServiceConnected: ", e);
++            }
++        }
++
++        @Override
++        public void onServiceDisconnected(ComponentName name) {
++            stop();
++        }
++
++        @Override
++        public void stop() {
++            mContext.unbindService(this);
++            mService = null;
++            try {
++                WindowManagerGlobal.getWindowManagerService().stopLongshotConnection();
++            } catch (RemoteException e) {
++                Log.w(TAG, "Remote exception in stop: ", e);
++            }
++        }
++
++        @Override
++        public void notifyMove() {
++            synchronized (mListeners) {
++                for (ILongScreenshotListener listener : mListeners) {
++                    try {
++                        listener.onMove();
++                    } catch (RemoteException e) {
++                        Log.w(TAG, "Remote exception in notifyMove: ", e);
++                    }
++                }
++            }
++        }
++
++        public void registerListener(ILongScreenshotListener listener) {
++            synchronized (mListeners) {
++                mListeners.add(listener);
++            }
++        }
++
++        public void unregisterListener(ILongScreenshotListener listener) {
++            synchronized (mListeners) {
++                mListeners.remove(listener);
++            }
++        }
++    }
++
++    private LongScreenshotManagerService(Context context) {
++        mContext = context;
++    }
++
++    public static LongScreenshotManagerService getInstance(Context context) {
++        if (sInstance == null) {
++            sInstance = new LongScreenshotManagerService(context);
++        }
++        return sInstance;
++    }
++
++    @Override
++    public void takeLongshot(boolean statusBarVisible, boolean navBarVisible) {
++        stopLongshot();
++        bindService(createLongshotIntent(statusBarVisible, navBarVisible), mLongshot, 1);
++    }
++
++    @Override
++    public void registerLongshotListener(ILongScreenshotListener listener) {
++        mLongshot.registerListener(listener);
++    }
++
++    @Override
++    public void unregisterLongshotListener(ILongScreenshotListener listener) {
++        mLongshot.unregisterListener(listener);
++    }
++
++    @Override
++    public void notifyLongshotScroll(boolean isOverScroll) {
++        try {
++            mLongshot.mService.notifyScroll(isOverScroll);
++        } catch (NullPointerException ignored) {
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in notifyLongshotScroll: ", e);
++        }
++    }
++
++    @Override
++    public boolean isLongshotMoveState() {
++        try {
++            return mLongshot.mService.isMoveState();
++        } catch (NullPointerException ignored) {
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in isLongshotMoveState: ", e);
++        }
++        return false;
++    }
++
++    @Override
++    public boolean isLongshotHandleState() {
++        try {
++            return mLongshot.mService.isHandleState();
++        } catch (NullPointerException ignored) {
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in isHandleState: ", e);
++        }
++        return false;
++    }
++
++    @Override
++    public void notifyScrollViewTop(int viewTop) {
++        try {
++            mLongshot.mService.notifyScrollViewTop(viewTop);
++        } catch (NullPointerException ignored) {
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in notifyScrollViewTop: ", e);
++        }
++    }
++
++    @Override
++    public void onUnscrollableView() {
++        try {
++            mLongshot.mService.onUnscrollableView();
++        } catch (NullPointerException ignored) {
++        } catch (RemoteException e) {
++            Log.w(TAG, "Remote exception in onUnscrollableView: ", e);
++        }
++    }
++
++    @Override
++    public boolean isLongshotMode() {
++        return mLongshot.mService != null;
++    }
++
++    @Override
++    public void stopLongshot() {
++        if (mLongshot.mService != null) {
++            try {
++                mLongshot.mService.stopLongshot();
++            } catch (RemoteException e) {
++                Log.w(TAG, "Remote exception in stopLongshot: ", e);
++            }
++        }
++    }
++
++    private Intent createIntent(ComponentName component) {
++        return new Intent().setComponent(component);
++    }
++
++    private Intent createLongshotIntent(boolean statusBarVisible, boolean navBarVisible) {
++        return createIntent(COMPONENT_LONGSHOT).putExtra(LongScreenshotManager.STATUSBAR_VISIBLE, statusBarVisible).putExtra(LongScreenshotManager.NAVIGATIONBAR_VISIBLE, navBarVisible);
++    }
++
++    private boolean bindService(Intent service, ServiceConnection conn, int flags) {
++        if (service != null && conn != null) {
++            return mContext.bindServiceAsUser(service, conn, flags, UserHandle.CURRENT);
++        }
++        return false;
++    }
++}
+diff --git a/core/java/com/android/internal/custom/longshot/LongScreenshotService.java b/core/java/com/android/internal/custom/longshot/LongScreenshotService.java
+new file mode 100644
+index 0000000..fe68f72
+--- /dev/null
++++ b/core/java/com/android/internal/custom/longshot/LongScreenshotService.java
+@@ -0,0 +1,38 @@
++package com.android.internal.custom.longshot;
++
++import android.content.Context;
++
++public abstract class LongScreenshotService extends ILongScreenshot.Stub {
++    private static final String TAG = "Longshot.Service";
++    protected Context mContext = null;
++    protected boolean mNavBarVisible = false;
++    protected boolean mStatusBarVisible = false;
++
++    public LongScreenshotService(Context context, boolean statusBarVisible, boolean navBarVisible) {
++        mContext = context;
++        mStatusBarVisible = statusBarVisible;
++        mNavBarVisible = navBarVisible;
++    }
++
++    @Override
++    public void start(ILongScreenshotCallback callback) {
++    }
++
++    @Override
++    public void notifyScroll(boolean isOverScroll) {
++    }
++
++    @Override
++    public boolean isMoveState() {
++        return false;
++    }
++
++    @Override
++    public boolean isHandleState() {
++        return false;
++    }
++
++    @Override
++    public void stopLongshot() {
++    }
++}
+diff --git a/core/java/com/android/internal/custom/longshot/injector/ScrollViewInjector.java b/core/java/com/android/internal/custom/longshot/injector/ScrollViewInjector.java
+new file mode 100644
+index 0000000..dea5cf6
+--- /dev/null
++++ b/core/java/com/android/internal/custom/longshot/injector/ScrollViewInjector.java
+@@ -0,0 +1,22 @@
++package com.android.internal.custom.longshot.injector;
++
++import android.content.Context;
++
++import com.android.internal.custom.longshot.LongScreenshotManager;
++
++public class ScrollViewInjector {
++
++    public static class ScrollView {
++        private static final String TAG = "ScrollViewInjector";
++        public static boolean isInjection = false;
++
++        public static void onOverScrolled(Context context, boolean isOverScroll) {
++            if (isInjection) {
++                LongScreenshotManager sm = (LongScreenshotManager) context.getSystemService(Context.LONGSCREENSHOT_SERVICE);
++                if (sm != null && sm.isLongshotMoveState()) {
++                    sm.notifyLongshotScroll(isOverScroll);
++                }
++            }
++        }
++    }
++}
+diff --git a/core/java/com/android/internal/custom/longshot/injector/ViewInjector.java b/core/java/com/android/internal/custom/longshot/injector/ViewInjector.java
+new file mode 100644
+index 0000000..cf3a7e6
+--- /dev/null
++++ b/core/java/com/android/internal/custom/longshot/injector/ViewInjector.java
+@@ -0,0 +1,181 @@
++package com.android.internal.custom.longshot.injector;
++
++import android.content.Context;
++
++import com.android.internal.custom.longshot.LongScreenshotManager;
++
++import java.util.ArrayList;
++import java.util.List;
++
++public class ViewInjector {
++
++    public static class View {
++
++        private static final List<Element> ELEMENTS_NOOVERSCROLL = new ArrayList();
++        private static final List<Element> ELEMENTS_NOSCROLL = new ArrayList();
++        private static final List<Element> ELEMENTS_OVERSCROLL = new ArrayList();
++        private static final List<Element> ELEMENTS_SCROLL = new ArrayList();
++        private static final String TAG = "ViewInjector";
++        public static boolean isInjection = false;
++
++        private enum Element {
++            SCROLL(5, "AbsListView.trackMotionScroll"),
++            QQSCROLL(7, "tencent.widget.AbsListView.onTouchEvent"),
++            MMAWAKEN12(12, "tencent.mm.ui.base.MMPullDownView.dispatchTouchEvent"),
++            MMAWAKEN14(14, "tencent.mm.ui.base.MMPullDownView.dispatchTouchEvent"),
++            MMAWAKEN15(15, "tencent.mm.ui.base.MMPullDownView.dispatchTouchEvent"),
++            OVERSCROLL(5, "AbsListView.onOverScrolled"),
++            CONTENTSCROLL(4, "ContentView.onScrollChanged"),
++            MMCHANGE9(9, "tencent.mm.ui.base.MMPullDownView.dispatchTouchEvent"),
++            MMCHANGE12(12, "tencent.mm.ui.base.MMPullDownView.dispatchTouchEvent"),
++            MMCHANGE14(14, "tencent.mm.ui.base.MMPullDownView.dispatchTouchEvent"),
++            MMCHANGE15(15, "tencent.mm.ui.base.MMPullDownView.dispatchTouchEvent"),
++            BROWSERSCROLL(14, "oppo.browser.navigation.widget.NavigationView.dispatchTouchEvent"),
++            QZONESCROLL(8, "qzone.widget.QZonePullToRefreshListView.onScrollChanged"),
++            WEBSCROLL(16, "WebView$PrivateAccess.overScrollBy"),
++            LISTOVERSCROLL(6, "AbsListView.onTouchEvent"),
++            WEBOVERSCROLL(5, "WebView$PrivateAccess.overScrollBy"),
++            BROWSEROVERSCROLL(11, "oppo.browser.navigation.widget.NavigationView.dispatchTouchEvent");
++
++            private String mName;
++            private int mPosition;
++
++            private Element(int position, String name) {
++                this.mName = null;
++                this.mPosition = -1;
++                this.mPosition = position;
++                this.mName = name;
++            }
++
++            public int getPosition() {
++                return this.mPosition;
++            }
++
++            public String getName() {
++                return this.mName;
++            }
++
++            public String getNameString() {
++                StringBuilder sb = new StringBuilder();
++                sb.append(".");
++                sb.append(getName());
++                sb.append("(");
++                return sb.toString();
++            }
++        }
++
++        public static void onUnscrollableView(Context context) {
++            if (isInjection) {
++                LongScreenshotManager sm = (LongScreenshotManager) context.getSystemService(Context.LONGSCREENSHOT_SERVICE);
++                if (sm != null) {
++                    sm.onUnscrollableView();
++                }
++            }
++        }
++
++        public static void setScrolledViewTop(Context context, int top) {
++            if (isInjection) {
++                LongScreenshotManager sm = (LongScreenshotManager) context.getSystemService(Context.LONGSCREENSHOT_SERVICE);
++                if (sm != null) {
++                    sm.notifyScrollViewTop(top);
++                }
++            }
++        }
++
++        public static void onOverScrolled(Context context, boolean isOverScroll) {
++            if (isInjection) {
++                LongScreenshotManager sm = (LongScreenshotManager) context.getSystemService(Context.LONGSCREENSHOT_SERVICE);
++                if (sm != null && sm.isLongshotMoveState()) {
++                    StackTraceElement[] stacks = Thread.currentThread().getStackTrace();
++                    ELEMENTS_OVERSCROLL.add(Element.LISTOVERSCROLL);
++                    ELEMENTS_NOOVERSCROLL.add(Element.WEBOVERSCROLL);
++                    ELEMENTS_NOOVERSCROLL.add(Element.BROWSERSCROLL);
++                    ELEMENTS_NOOVERSCROLL.add(Element.BROWSEROVERSCROLL);
++                    if (!isElement(stacks, ELEMENTS_NOOVERSCROLL)) {
++                        if (isElement(stacks, ELEMENTS_OVERSCROLL)) {
++                            sm.notifyLongshotScroll(true);
++                        } else {
++                            sm.notifyLongshotScroll(false);
++                        }
++                    }
++                    clearElements();
++                }
++            }
++        }
++
++        public static void onScrollChanged(Context context, boolean canScrollVertically) {
++            if (isInjection) {
++                LongScreenshotManager sm = (LongScreenshotManager) context.getSystemService(Context.LONGSCREENSHOT_SERVICE);
++                if (sm != null && sm.isLongshotMoveState()) {
++                    StackTraceElement[] stacks = Thread.currentThread().getStackTrace();
++                    ELEMENTS_NOSCROLL.add(Element.MMCHANGE9);
++                    ELEMENTS_NOSCROLL.add(Element.MMCHANGE12);
++                    ELEMENTS_NOSCROLL.add(Element.MMCHANGE14);
++                    ELEMENTS_NOSCROLL.add(Element.MMCHANGE15);
++                    ELEMENTS_NOSCROLL.add(Element.CONTENTSCROLL);
++                    ELEMENTS_NOSCROLL.add(Element.BROWSERSCROLL);
++                    ELEMENTS_NOSCROLL.add(Element.QZONESCROLL);
++                    ELEMENTS_NOSCROLL.add(Element.WEBSCROLL);
++                    if (!isElement(stacks, ELEMENTS_NOSCROLL)) {
++                        if (!canScrollVertically) {
++                            sm.notifyLongshotScroll(true);
++                        } else {
++                            sm.notifyLongshotScroll(false);
++                        }
++                    }
++                    clearElements();
++                }
++            }
++        }
++
++        public static boolean onAwakenScrollBars(Context context) {
++            if (!isInjection) {
++                return false;
++            }
++            boolean result = false;
++            LongScreenshotManager sm = (LongScreenshotManager) context.getSystemService(Context.LONGSCREENSHOT_SERVICE);
++            if (sm != null) {
++                result = sm.isLongshotMoveState();
++                if (result) {
++                    StackTraceElement[] stacks = Thread.currentThread().getStackTrace();
++                    ELEMENTS_OVERSCROLL.add(Element.OVERSCROLL);
++                    ELEMENTS_NOSCROLL.add(Element.MMAWAKEN12);
++                    ELEMENTS_NOSCROLL.add(Element.MMAWAKEN14);
++                    ELEMENTS_NOSCROLL.add(Element.MMAWAKEN15);
++                    ELEMENTS_SCROLL.add(Element.QQSCROLL);
++                    ELEMENTS_SCROLL.add(Element.SCROLL);
++                    if (!isElement(stacks, ELEMENTS_NOSCROLL)) {
++                        if (isElement(stacks, ELEMENTS_OVERSCROLL)) {
++                            sm.notifyLongshotScroll(true);
++                        } else if (isElement(stacks, ELEMENTS_SCROLL)) {
++                            sm.notifyLongshotScroll(false);
++                        }
++                    }
++                    clearElements();
++                }
++            }
++            return result;
++        }
++
++        private static boolean isElement(StackTraceElement[] stacks, List<Element> elements) {
++            boolean result = false;
++            for (Element element : elements) {
++                int pos = element.getPosition();
++                if (stacks.length > pos) {
++                    result = stacks[pos].toString().contains(element.getNameString());
++                    if (result) {
++                        break;
++                    }
++                }
++            }
++            return result;
++        }
++
++        private static void clearElements() {
++            ELEMENTS_SCROLL.clear();
++            ELEMENTS_NOSCROLL.clear();
++            ELEMENTS_OVERSCROLL.clear();
++            ELEMENTS_NOOVERSCROLL.clear();
++        }
++    }
++}
+diff --git a/core/java/com/android/internal/util/ScreenshotHelper.java b/core/java/com/android/internal/util/ScreenshotHelper.java
+index 7fd94c6..d3d2b01 100644
+--- a/core/java/com/android/internal/util/ScreenshotHelper.java
++++ b/core/java/com/android/internal/util/ScreenshotHelper.java
+@@ -5,6 +5,7 @@
+ import android.content.Context;
+ import android.content.Intent;
+ import android.content.ServiceConnection;
++import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.IBinder;
+ import android.os.Message;
+@@ -12,6 +13,9 @@
+ import android.os.RemoteException;
+ import android.os.UserHandle;
+ import android.util.Log;
++import android.view.WindowManager;
++
++import com.android.internal.custom.longshot.LongScreenshotManagerService;
+ 
+ public class ScreenshotHelper {
+     private static final String TAG = "ScreenshotHelper";
+@@ -21,6 +25,8 @@
+             "com.android.systemui.screenshot.TakeScreenshotService";
+     private static final String SYSUI_SCREENSHOT_ERROR_RECEIVER =
+             "com.android.systemui.screenshot.ScreenshotServiceErrorReceiver";
++    private static final String SYSUI_SCREENSHOT_CAPTURE_ERROR_RECEIVER =
++            "com.android.systemui.screenshot.ScreenshotServiceCaptureErrorReceiver";
+ 
+     // Time until we give up on the screenshot & show an error instead.
+     private final int SCREENSHOT_TIMEOUT_MS = 10000;
+@@ -28,6 +34,18 @@
+     private final Object mScreenshotLock = new Object();
+     private ServiceConnection mScreenshotConnection = null;
+     private final Context mContext;
++    private Handler mHandler;
++    final Runnable mLongshotTimeout = new Runnable() {
++        public void run() {
++            synchronized (mScreenshotLock) {
++                if (mScreenshotConnection != null) {
++                    mContext.unbindService(mScreenshotConnection);
++                    mScreenshotConnection = null;
++                    notifyScreenshotError();
++                }
++            }
++        }
++    };
+ 
+     public ScreenshotHelper(Context context) {
+         mContext = context;
+@@ -136,4 +154,103 @@
+         mContext.sendBroadcastAsUser(errorIntent, UserHandle.CURRENT);
+     }
+ 
++    /**
++     * Long screenshot methods
++     */
++    public void takeScreenshot(final int screenshotType, final boolean hasStatus,
++            final boolean hasNav, @NonNull Handler handler, final boolean isLongshot,
++            final Bundle screenshotBundle) {
++        if (screenshotType != WindowManager.TAKE_SCREENSHOT_FULLSCREEN){
++            takeScreenshot(screenshotType, hasStatus, hasNav, handler);
++            return;
++        }
++        synchronized (mScreenshotLock) {
++            if (mScreenshotConnection != null) {
++                return;
++            }
++            mHandler = handler;
++            final Intent serviceIntent = new Intent();
++            serviceIntent.setComponent(LongScreenshotManagerService.TAKE_SCREENSHOT_COMPONENT);
++            ServiceConnection conn = new ServiceConnection() {
++                @Override
++                public void onServiceConnected(ComponentName name, IBinder service) {
++                    synchronized (mScreenshotLock) {
++                        if (mScreenshotConnection != this) {
++                            return;
++                        }
++                        Messenger messenger = new Messenger(service);
++                        Message msg = Message.obtain(null, screenshotType);
++                        final ServiceConnection myConn = this;
++                        Handler h = new Handler(handler.getLooper()) {
++                            @Override
++                            public void handleMessage(Message msg) {
++                                synchronized (mScreenshotLock) {
++                                    if (msg.what == 2) {
++                                        handler.removeCallbacks(mLongshotTimeout);
++                                    } else if (mScreenshotConnection == myConn) {
++                                        mContext.unbindService(mScreenshotConnection);
++                                        mScreenshotConnection = null;
++                                        handler.removeCallbacks(mLongshotTimeout);
++                                    }
++                                }
++                            }
++                        };
++                        msg.replyTo = new Messenger(h);
++                        msg.arg1 = hasStatus ? 1: 0;
++                        msg.arg2 = hasNav ? 1: 0;
++                        msg.obj = screenshotBundle;
++                        try {
++                            messenger.send(msg);
++                        } catch (RemoteException e) {
++                            Log.e(TAG, "Couldn't take screenshot: " + e);
++                        }
++                    }
++                }
++
++                @Override
++                public void onServiceDisconnected(ComponentName name) {
++                    if (mScreenshotConnection != null) {
++                        mContext.unbindService(mScreenshotConnection);
++                        mScreenshotConnection = null;
++                        handler.removeCallbacks(mLongshotTimeout);
++                        notifyScreenshotError();
++                    }
++                }
++            };
++            if (mContext.bindServiceAsUser(serviceIntent, conn,
++                    Context.BIND_AUTO_CREATE | Context.BIND_FOREGROUND_SERVICE_WHILE_AWAKE,
++                    UserHandle.CURRENT)) {
++                mScreenshotConnection = conn;
++                if (isLongshot) {
++                    handler.postDelayed(mLongshotTimeout, 120000);
++                } else {
++                    handler.postDelayed(mLongshotTimeout, SCREENSHOT_TIMEOUT_MS);
++                }
++            }
++        }
++    }
++
++    public void stopLongshotConnection() {
++        synchronized (mScreenshotLock) {
++            if (mScreenshotConnection != null) {
++                mContext.unbindService(mScreenshotConnection);
++                mScreenshotConnection = null;
++                mHandler.removeCallbacks(mLongshotTimeout);
++            }
++        }
++    }
++
++    public void notifyScreenshotCaptureError() {
++        // If the service process is killed, then ask it to clean up after itself
++        final ComponentName errorComponent = new ComponentName(SYSUI_PACKAGE,
++                SYSUI_SCREENSHOT_CAPTURE_ERROR_RECEIVER);
++        // Broadcast needs to have a valid action.  We'll just pick
++        // a generic one, since the receiver here doesn't care.
++        Intent errorIntent = new Intent(Intent.ACTION_USER_PRESENT);
++        errorIntent.setComponent(errorComponent);
++        errorIntent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT |
++                Intent.FLAG_RECEIVER_FOREGROUND);
++        mContext.sendBroadcastAsUser(errorIntent, UserHandle.CURRENT);
++    }
++
+ }
+diff --git a/core/java/com/android/internal/view/IInputMethodManager.aidl b/core/java/com/android/internal/view/IInputMethodManager.aidl
+index 9ed1ffb..f145248 100644
+--- a/core/java/com/android/internal/view/IInputMethodManager.aidl
++++ b/core/java/com/android/internal/view/IInputMethodManager.aidl
+@@ -93,4 +93,6 @@
+     void reportFullscreenMode(in IBinder token, boolean fullscreen);
+ 
+     oneway void notifyUserAction(int sequenceNumber);
++    // Long screenshot
++    boolean hideSoftInputForLongshot(int flags, in ResultReceiver resultReceiver);
+ }
+diff --git a/packages/SettingsLib/src/com/android/settingslib/Utils.java b/packages/SettingsLib/src/com/android/settingslib/Utils.java
+index 3476c1c..fff044d 100644
+--- a/packages/SettingsLib/src/com/android/settingslib/Utils.java
++++ b/packages/SettingsLib/src/com/android/settingslib/Utils.java
+@@ -30,6 +30,7 @@
+ 
+ import java.text.NumberFormat;
+ import java.util.Locale;
++import com.android.internal.custom.longshot.LongScreenshotManagerService;
+ 
+ public class Utils {
+ 
+@@ -286,6 +287,7 @@
+                 || pkg.packageName.equals(sServicesSystemSharedLibPackageName)
+                 || pkg.packageName.equals(sSharedSystemSharedLibPackageName)
+                 || pkg.packageName.equals(PrintManager.PRINT_SPOOLER_PACKAGE_NAME)
++                || pkg.packageName.equals(LongScreenshotManagerService.PACKAGENAME_LONGSHOT)
+                 || isDeviceProvisioningPackage(resources, pkg.packageName);
+     }
+ 
+diff --git a/packages/SystemUI/AndroidManifest.xml b/packages/SystemUI/AndroidManifest.xml
+index 684ab36..789820b 100644
+--- a/packages/SystemUI/AndroidManifest.xml
++++ b/packages/SystemUI/AndroidManifest.xml
+@@ -289,6 +289,13 @@
+                 <action android:name="com.android.systemui.screenshot.SHOW_ERROR" />
+             </intent-filter>
+         </receiver>
++        <receiver android:name=".screenshot.ScreenshotServiceCaptureErrorReceiver"
++            android:process=":screenshot"
++            android:exported="false">
++            <intent-filter>
++                <action android:name="com.android.systemui.screenshot.SHOW_ERROR" />
++            </intent-filter>
++        </receiver>
+ 
+         <receiver android:name=".SysuiRestartReceiver"
+             android:exported="false">
+diff --git a/packages/SystemUI/src/com/android/systemui/globalactions/GlobalActionsDialog.java b/packages/SystemUI/src/com/android/systemui/globalactions/GlobalActionsDialog.java
+index c86721d..faaee91 100644
+--- a/packages/SystemUI/src/com/android/systemui/globalactions/GlobalActionsDialog.java
++++ b/packages/SystemUI/src/com/android/systemui/globalactions/GlobalActionsDialog.java
+@@ -694,7 +694,11 @@
+             mHandler.postDelayed(new Runnable() {
+                 @Override
+                 public void run() {
+-                    mScreenshotHelper.takeScreenshot(1, true, true, mHandler);
++                    try {
++                        WindowManagerGlobal.getWindowManagerService().takeOPScreenshot(1, 0);
++                    } catch (RemoteException e) {
++                        Log.e(TAG, "Error while trying to takeOPScreenshot.", e);
++                    }
+                     MetricsLogger.action(mContext,
+                             MetricsEvent.ACTION_SCREENSHOT_POWER_MENU);
+                 }
+diff --git a/packages/SystemUI/src/com/android/systemui/screenshot/ScreenshotServiceCaptureErrorReceiver.java b/packages/SystemUI/src/com/android/systemui/screenshot/ScreenshotServiceCaptureErrorReceiver.java
+new file mode 100644
+index 0000000..b7feb73
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/screenshot/ScreenshotServiceCaptureErrorReceiver.java
+@@ -0,0 +1,40 @@
++/*
++ * Copyright (C) 2016 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.screenshot;
++
++import android.app.NotificationManager;
++import android.content.BroadcastReceiver;
++import android.content.Context;
++import android.content.Intent;
++
++import com.android.systemui.R;
++
++/**
++ * Performs a number of miscellaneous, non-system-critical actions
++ * after the system has finished booting.
++ */
++public class ScreenshotServiceCaptureErrorReceiver extends BroadcastReceiver {
++
++    @Override
++    public void onReceive(final Context context, Intent intent) {
++        // Show a message that we've failed to save the image to disk
++        NotificationManager nm = (NotificationManager)
++                context.getSystemService(Context.NOTIFICATION_SERVICE);
++        GlobalScreenshot.notifyScreenshotError(context, nm,
++                R.string.screenshot_failed_to_capture_text);
++    }
++}
+diff --git a/services/core/java/com/android/server/InputMethodManagerService.java b/services/core/java/com/android/server/InputMethodManagerService.java
+index 19170f8..bd30ce2 100644
+--- a/services/core/java/com/android/server/InputMethodManagerService.java
++++ b/services/core/java/com/android/server/InputMethodManagerService.java
+@@ -295,6 +295,9 @@
+                 new DebugFlag("debug.optimize_startinput", false);
+     }
+ 
++    // Long screenshot
++    private long LONGSHOT_BLOCK_SHOWING_TIMEOUT = 1000;
++    public boolean mLongshotBlockShowing = false;
+ 
+     final Context mContext;
+     final Resources mRes;
+@@ -2616,6 +2619,11 @@
+             return false;
+         }
+ 
++        if (mLongshotBlockShowing) {
++            Slog.d(TAG, "Longshot Blocking");
++            return false;
++        }
++
+         boolean res = false;
+         if (mCurMethod != null) {
+             if (DEBUG) Slog.d(TAG, "showCurrentInputLocked: mCurToken=" + mCurToken);
+@@ -2684,6 +2692,30 @@
+         }
+     }
+ 
++    @Override
++    public boolean hideSoftInputForLongshot(int flags, ResultReceiver resultReceiver) {
++        boolean hideCurrentInputLocked;
++        if (!calledFromValidUser()) {
++            return false;
++        }
++        int uid = Binder.getCallingUid();
++        long ident = Binder.clearCallingIdentity();
++        try {
++            synchronized (mMethodMap) {
++                mLongshotBlockShowing = true;
++                mHandler.postDelayed(new Runnable() {
++                    public void run() {
++                        mLongshotBlockShowing = false;
++                    }
++                }, LONGSHOT_BLOCK_SHOWING_TIMEOUT);
++                hideCurrentInputLocked = hideCurrentInputLocked(flags, resultReceiver);
++            }
++            return hideCurrentInputLocked;
++        } finally {
++            Binder.restoreCallingIdentity(ident);
++        }
++    }
++
+     boolean hideCurrentInputLocked(int flags, ResultReceiver resultReceiver) {
+         if ((flags&InputMethodManager.HIDE_IMPLICIT_ONLY) != 0
+                 && (mShowExplicitlyRequested || mShowForced)) {
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index c6ffb23..05eac98 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -326,6 +326,8 @@
+ 
+ import dalvik.system.PathClassLoader;
+ 
++import com.android.internal.custom.longshot.ILongScreenshotManager;
++
+ /**
+  * WindowManagerPolicy implementation for the Android phone UI.  This
+  * introduces a new method suffix, Lp, for an internal lock of the
+@@ -773,6 +775,7 @@
+     boolean mSystemNavigationKeysEnabled;
+ 
+     Display mDisplay;
++    protected int mDisplayRotation;
+ 
+     int mLandscapeRotation = 0;  // default landscape rotation
+     int mSeascapeRotation = 0;   // "other" landscape rotation, 180 degrees from mLandscapeRotation
+@@ -2099,18 +2102,37 @@
+ 
+         @Override
+         public void run() {
++        boolean longshot;
++		boolean inMultiWindow = mFocusedWindow != null ? mFocusedWindow.isInMultiWindowMode() : false;
++		boolean dockMinimized = mWindowManagerInternal.isMinimizedDock();
++		if (mScreenshotType == 2 || keyguardOn() || !isUserSetupComplete() ||
++		    !isDeviceProvisioned() || ((inMultiWindow && !dockMinimized) || mDisplayRotation != 0)) {
++			longshot = false;
++		} else {
++			longshot = true;
++		}
++		Bundle screenshotBundle = new Bundle();
++		screenshotBundle.putBoolean("longshot", longshot);
++		if (mFocusedWindow != null) {
++		screenshotBundle.putString("focusWindow", mFocusedWindow.getAttrs().packageName);
++		}
++		if (mFocusedWindow != null &&
++		    (mFocusedWindow.getAttrs().flags & WindowManager.LayoutParams.FLAG_SECURE) != 0) {
++			mScreenshotHelper.notifyScreenshotCaptureError();
++			return;
++        }
+ 	    if (Settings.System.getInt(mContext.getContentResolver(),
+                 Settings.System.SCREEN_SHOT_SHORTCUT_SWITCH, 0) == 1) {
+             mScreenshotHelper.takeScreenshot(mScreenshotType,
+                     mStatusBar != null && mStatusBar.isVisibleLw(),
+-                    mNavigationBar != null && mNavigationBar.isVisibleLw(), mHandler);
++                    mNavigationBar != null && mNavigationBar.isVisibleLw(), mHandler, longshot, screenshotBundle);
+             } else {
+              Slog.d(TAG, "ScreenShot Shortcut Disabled");
+ 	        }
+             if (!mPocketLockShowing){
+                 mScreenshotHelper.takeScreenshot(mScreenshotType,
+                         mStatusBar != null && mStatusBar.isVisibleLw(),
+-                        mNavigationBar != null && mNavigationBar.isVisibleLw(), mHandler);
++                        mNavigationBar != null && mNavigationBar.isVisibleLw(), mHandler, longshot, screenshotBundle);
+             }
+         }
+     }
+@@ -2164,6 +2186,7 @@
+             mGlobalActions = new GlobalActions(mContext, mWindowManagerFuncs);
+         }
+         mGlobalActions.showDialog(keyguardShowing, isDeviceProvisioned());
++        stopLongshot();
+         if (keyguardShowing) {
+             // since it took two seconds of long press to bring this up,
+             // poke the wake lock so they have some time to see the dialog.
+@@ -2171,6 +2194,32 @@
+         }
+     }
+ 
++    private void stopLongshot() {
++        ILongScreenshotManager shot = ILongScreenshotManager.Stub.asInterface(ServiceManager.getService(Context.LONGSCREENSHOT_SERVICE));
++        if (shot != null) {
++            try {
++                if (shot.isLongshotMode()) {
++                    shot.stopLongshot();
++                }
++            } catch (RemoteException e) {
++                Slog.d(TAG, e.toString());
++            }
++        }
++    }
++
++    @Override
++    public void stopLongshotConnection() {
++        if (mScreenshotHelper != null) {
++            mScreenshotHelper.stopLongshotConnection();
++        }
++    }
++
++    @Override
++    public void takeOPScreenshot(int type, int reason) {
++        mScreenshotRunnable.setScreenshotType(type);
++        mHandler.post(mScreenshotRunnable);
++    }
++
+     boolean isDeviceProvisioned() {
+         return Settings.Global.getInt(
+                 mContext.getContentResolver(), Settings.Global.DEVICE_PROVISIONED, 0) != 0;
+@@ -5380,6 +5429,7 @@
+     @Override
+     public void beginLayoutLw(DisplayFrames displayFrames, int uiMode) {
+         displayFrames.onBeginLayout();
++        mDisplayRotation = displayFrames.mRotation;
+         // TODO(multi-display): This doesn't seem right...Maybe only apply to default display?
+         mSystemGestures.screenWidth = displayFrames.mUnrestricted.width();
+         mSystemGestures.screenHeight = displayFrames.mUnrestricted.height();
+diff --git a/services/core/java/com/android/server/policy/WindowManagerPolicy.java b/services/core/java/com/android/server/policy/WindowManagerPolicy.java
+index e17d08d..1eb5d22 100644
+--- a/services/core/java/com/android/server/policy/WindowManagerPolicy.java
++++ b/services/core/java/com/android/server/policy/WindowManagerPolicy.java
+@@ -1820,4 +1820,11 @@
+      * Send some ActionHandler commands to WindowManager.
+      */
+     public void sendCustomAction(Intent intent);
++
++    /**
++     * Long screenshot
++     * @hide
++     */
++    public void takeOPScreenshot(int type, int reason);
++    public void stopLongshotConnection();
+ }
+diff --git a/services/core/java/com/android/server/wm/WindowManagerInternal.java b/services/core/java/com/android/server/wm/WindowManagerInternal.java
+index 6686b80..3fedccf 100644
+--- a/services/core/java/com/android/server/wm/WindowManagerInternal.java
++++ b/services/core/java/com/android/server/wm/WindowManagerInternal.java
+@@ -425,4 +425,9 @@
+      * the window token is not found.
+      */
+     public abstract int getWindowOwnerUserId(IBinder windowToken);
++
++    /**
++     * Long screenshot
++     */
++    public abstract boolean isMinimizedDock();
+ }
+diff --git a/services/core/java/com/android/server/wm/WindowManagerService.java b/services/core/java/com/android/server/wm/WindowManagerService.java
+index 50e8341..982daa8 100644
+--- a/services/core/java/com/android/server/wm/WindowManagerService.java
++++ b/services/core/java/com/android/server/wm/WindowManagerService.java
+@@ -7554,6 +7554,20 @@
+                 return UserHandle.USER_NULL;
+             }
+         }
++
++        @Override
++        public boolean isMinimizedDock() {
++            boolean isMinimizedDock;
++            synchronized (mWindowMap) {
++                try {
++                    boostPriorityForLockedSection();
++                    isMinimizedDock = getDefaultDisplayContentLocked().getDockedDividerController().isMinimizedDock();
++                } finally {
++                    resetPriorityAfterLockedSection();
++                }
++            }
++            return isMinimizedDock;
++        }
+     }
+ 
+     void registerAppFreezeListener(AppFreezeListener listener) {
+@@ -7740,4 +7754,13 @@
+     public void sendCustomAction(Intent intent) {
+         mPolicy.sendCustomAction(intent);
+     }
++
++    public void stopLongshotConnection() {
++        mPolicy.stopLongshotConnection();
++    }
++
++    @Override
++    public void takeOPScreenshot(int type, int reason) {
++        mPolicy.takeOPScreenshot(type, reason);
++    }
+ }
+diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
+index 2a207b2..7d7f03d 100644
+--- a/services/java/com/android/server/SystemServer.java
++++ b/services/java/com/android/server/SystemServer.java
+@@ -146,6 +146,9 @@
+ import static android.os.IServiceManager.DUMP_FLAG_PROTO;
+ import static android.view.Display.DEFAULT_DISPLAY;
+ 
++// Long screenshot
++import com.android.internal.custom.longshot.LongScreenshotManagerService;
++
+ public final class SystemServer {
+     private static final String TAG = "SystemServer";
+ 
+@@ -984,6 +987,10 @@
+             traceBeginAndSlog("PinnerService");
+             mSystemServiceManager.startService(PinnerService.class);
+             traceEnd();
++
++            traceBeginAndSlog("LongScreenShot Manager");
++            ServiceManager.addService(Context.LONGSCREENSHOT_SERVICE, LongScreenshotManagerService.getInstance(context));
++            traceEnd();
+         } catch (RuntimeException e) {
+             Slog.e("System", "******************************************");
+             Slog.e("System", "************ Failure starting core service", e);
