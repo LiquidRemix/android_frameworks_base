@@ -24,9 +24,11 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import static java.lang.Thread.sleep;
 
@@ -55,6 +57,7 @@ public class AppOpsControllerTest extends SysuiTestCase {
     private static final String TEST_PACKAGE_NAME = "test";
     private static final int TEST_UID = UserHandle.getUid(0, 0);
     private static final int TEST_UID_OTHER = UserHandle.getUid(1, 0);
+    private static final int TEST_UID_NON_USER_SENSITIVE = UserHandle.getUid(2, 0);
 
     @Mock
     private AppOpsManager mAppOpsManager;
@@ -168,6 +171,14 @@ public class AppOpsControllerTest extends SysuiTestCase {
                 mController.getActiveAppOpsForUser(UserHandle.getUserId(TEST_UID)).size());
         assertEquals(1,
                 mController.getActiveAppOpsForUser(UserHandle.getUserId(TEST_UID_OTHER)).size());
+    }
+
+    @Test
+    public void nonUserSensitiveOpsAreIgnored() {
+        mController.onOpActiveChanged(AppOpsManager.OP_RECORD_AUDIO,
+                TEST_UID_NON_USER_SENSITIVE, TEST_PACKAGE_NAME, true);
+        assertEquals(0, mController.getActiveAppOpsForUser(
+                UserHandle.getUserId(TEST_UID_NON_USER_SENSITIVE)).size());
     }
 
     @Test
