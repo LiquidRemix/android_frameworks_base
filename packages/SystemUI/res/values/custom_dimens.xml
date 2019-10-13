@@ -125,4 +125,9 @@
 
     <dimen name="quick_qs_drag_handle_height">20dp</dimen>
 
+    <dimen name="battery_bar_view_height">6dp</dimen>
+    
+    <!-- Sets a custom extra padding for the QS icons and statusbar date -->
+    <dimen name="qs_items_padding">8dp</dimen>
+
 </resources>

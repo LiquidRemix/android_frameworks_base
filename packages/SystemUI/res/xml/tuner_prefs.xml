@@ -88,11 +88,6 @@
 
         <!-- secure -->
 
-        <com.android.systemui.tuner.ClockPreference
-            android:title="@string/tuner_time"
-            android:summary="%s"
-            android:entries="@array/clock_options" />
-
     </PreferenceScreen>
 
     <PreferenceScreen
@@ -116,7 +111,7 @@
         <com.android.systemui.tuner.TunerSwitch
           android:key="doze_always_on"
           android:title="@string/tuner_doze_always_on"
-          sysui:defValue="true" />
+          sysui:defValue="false" />
 
     </PreferenceScreen>
 

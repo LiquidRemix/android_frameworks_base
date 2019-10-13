@@ -289,7 +289,4 @@
   <!-- Whether or not we should show vendor mismatch message -->
   <java-symbol type="bool" name="config_show_vendor_mismatch_message" />
 
-  <!-- FoD -->
-  <java-symbol type="bool" name="config_needCustomFODView" />
-  <java-symbol type="bool" name="config_usesOnePlusFOD" />
 </resources>

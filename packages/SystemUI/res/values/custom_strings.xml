@@ -411,4 +411,11 @@
     <!-- App Picker Tile -->
     <string name="quick_settings_apppicker">App Picker</string>
 
+    <string name="tuner_keyguard_show_watt_title">Show charging watts</string>
+    <string name="tuner_keyguard_show_watt_summary">Show current charging watts value in mW</string>
+    <string name="tuner_keyguard_show_battery_bar_title">Show battery bar</string>
+    <string name="tuner_keyguard_show_battery_bar_summary">Show battery bar on charging in always on display</string>
+    <string name="tuner_keyguard_show_battery_bar_always_title">Always show battery bar</string>
+    <string name="tuner_keyguard_show_battery_bar_always_summary">Always show battery bar on charging</string>
+
 </resources>

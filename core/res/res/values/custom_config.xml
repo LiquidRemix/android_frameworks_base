@@ -204,9 +204,4 @@
     <!-- Whether or not we should show vendor mismatch message -->
     <bool name="config_show_vendor_mismatch_message">false</bool>
 
-    <!-- Show a custom view for FOD -->
-    <bool name="config_needCustomFODView">false</bool>
-
-    <bool name="config_usesOnePlusFOD">false</bool>
-
 </resources>

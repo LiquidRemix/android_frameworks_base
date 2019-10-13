@@ -6120,14 +6120,14 @@ public class StatusBar extends SystemUI implements DemoMode,
                         // Otherwise just show the always-on screen.
                         setPulsing(true);
                     }
-                    KeyguardUpdateMonitor.getInstance(mContext).setPulsing(true);
+                    setOnPulseEvent(reason, true);
                 }
 
                 @Override
                 public void onPulseFinished() {
                     callback.onPulseFinished();
                     setPulsing(false);
-                    KeyguardUpdateMonitor.getInstance(mContext).setPulsing(false);
+                    setOnPulseEvent(-1, false);
                 }
 
                 private void setPulsing(boolean pulsing) {
