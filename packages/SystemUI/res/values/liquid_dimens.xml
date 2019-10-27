@@ -23,4 +23,10 @@
     <!-- OmniStyle custom headers -->
     <dimen name="qs_header_image_offset">0dp</dimen>
     <dimen name="qs_header_image_side_margin">0dp</dimen>
+
+    <!-- Height of the battery icon in the status bar when set to circle style. -->
+    <dimen name="status_bar_battery_icon_circle_height">12.5dp</dimen>
+    <!-- Width of the battery icon in the status bar when set to circle style. -->
+    <dimen name="status_bar_battery_icon_circle_width">12.5dp</dimen>
+
 </resources>
