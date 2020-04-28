@@ -217,12 +217,6 @@ static void nativeRelease(JNIEnv* env, jclass clazz, jlong nativeObject) {
     ctrl->decStrong((void *)nativeCreate);
 }
 
-static void nativeDestroy(JNIEnv* env, jclass clazz, jlong nativeObject) {
-    sp<SurfaceControl> ctrl(reinterpret_cast<SurfaceControl *>(nativeObject));
-    ctrl->destroy();
-    ctrl->decStrong((void *)nativeCreate);
-}
-
 static void nativeDisconnect(JNIEnv* env, jclass clazz, jlong nativeObject) {
     SurfaceControl* const ctrl = reinterpret_cast<SurfaceControl *>(nativeObject);
     if (ctrl != NULL) {
@@ -467,15 +461,6 @@ static void nativeSetInputWindowInfo(JNIEnv* env, jclass clazz, jlong transactio
 
     SurfaceControl* const ctrl = reinterpret_cast<SurfaceControl *>(nativeObject);
     transaction->setInputWindowInfo(ctrl, *handle->getInfo());
-}
-
-static void nativeTransferTouchFocus(JNIEnv* env, jclass clazz, jlong transactionObj,
-        jobject fromTokenObj, jobject toTokenObj) {
-    auto transaction = reinterpret_cast<SurfaceComposerClient::Transaction*>(transactionObj);
-
-    sp<IBinder> fromToken(ibinderForJavaObject(env, fromTokenObj));
-    sp<IBinder> toToken(ibinderForJavaObject(env, toTokenObj));
-    transaction->transferTouchFocus(fromToken, toToken);
 }
 
 static void nativeSyncInputWindows(JNIEnv* env, jclass clazz, jlong transactionObj) {
@@ -1268,8 +1253,6 @@ static const JNINativeMethod sSurfaceControlMethods[] = {
             (void*)nativeWriteToParcel },
     {"nativeRelease", "(J)V",
             (void*)nativeRelease },
-    {"nativeDestroy", "(J)V",
-            (void*)nativeDestroy },
     {"nativeDisconnect", "(J)V",
             (void*)nativeDisconnect },
     {"nativeCreateTransaction", "()J",
@@ -1389,8 +1372,6 @@ static const JNINativeMethod sSurfaceControlMethods[] = {
             (void*)nativeCaptureLayers },
     {"nativeSetInputWindowInfo", "(JJLandroid/view/InputWindowHandle;)V",
             (void*)nativeSetInputWindowInfo },
-    {"nativeTransferTouchFocus", "(JLandroid/os/IBinder;Landroid/os/IBinder;)V",
-            (void*)nativeTransferTouchFocus },
     {"nativeSetMetadata", "(JJILandroid/os/Parcel;)V",
             (void*)nativeSetMetadata },
     {"nativeGetDisplayedContentSamplingAttributes",

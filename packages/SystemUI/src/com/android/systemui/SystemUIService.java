@@ -16,6 +16,7 @@
 
 package com.android.systemui;
 
+import android.annotation.NonNull;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
@@ -66,8 +67,20 @@ public class SystemUIService extends Service {
 
     @Override
     protected void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
-        SystemUI[] services = ((SystemUIApplication) getApplication()).getServices();
+        if (args != null && args.length > 0 && args[0].equals("--config")) {
+            dumpConfig(pw);
+            return;
+        }
+
+        dumpServices(((SystemUIApplication) getApplication()).getServices(), fd, pw, args);
+        dumpConfig(pw);
+    }
+
+    static void dumpServices(
+            SystemUI[] services, FileDescriptor fd, PrintWriter pw, String[] args) {
         if (args == null || args.length == 0) {
+            pw.println("dumping service: " + Dependency.class.getName());
+            Dependency.staticDump(fd, pw, args);
             for (SystemUI ui: services) {
                 pw.println("dumping service: " + ui.getClass().getName());
                 ui.dump(fd, pw, args);
@@ -78,12 +91,39 @@ public class SystemUIService extends Service {
             }
         } else {
             String svc = args[0].toLowerCase();
+            if (Dependency.class.getName().endsWith(svc)) {
+                Dependency.staticDump(fd, pw, args);
+            }
             for (SystemUI ui: services) {
                 String name = ui.getClass().getName().toLowerCase();
                 if (name.endsWith(svc)) {
                     ui.dump(fd, pw, args);
                 }
             }
+        }
+    }
+
+    private void dumpConfig(@NonNull PrintWriter pw) {
+        pw.println("SystemUiServiceComponents configuration:");
+
+        pw.print("vendor component: ");
+        pw.println(getResources().getString(R.string.config_systemUIVendorServiceComponent));
+
+        dumpConfig(pw, "global", R.array.config_systemUIServiceComponents);
+        dumpConfig(pw, "per-user", R.array.config_systemUIServiceComponentsPerUser);
+    }
+
+    private void dumpConfig(@NonNull PrintWriter pw, @NonNull String type, int resId) {
+        final String[] services = getResources().getStringArray(resId);
+        pw.print(type); pw.print(": ");
+        if (services == null) {
+            pw.println("N/A");
+            return;
+        }
+        pw.print(services.length);
+        pw.println(" services");
+        for (int i = 0; i < services.length; i++) {
+            pw.print("  "); pw.print(i); pw.print(": "); pw.println(services[i]);
         }
     }
 }

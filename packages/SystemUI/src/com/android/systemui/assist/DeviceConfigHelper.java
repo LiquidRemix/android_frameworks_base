@@ -22,9 +22,19 @@ import androidx.annotation.Nullable;
 
 import java.util.concurrent.Executor;
 
-public class PhenotypeHelper {
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
-    public PhenotypeHelper() {}
+/**
+ * Wrapper class for retrieving System UI device configuration values.
+ *
+ * Can be mocked in tests for ease of testing the effects of particular values.
+ */
+@Singleton
+public class DeviceConfigHelper {
+
+    @Inject
+    public DeviceConfigHelper() {}
 
     public long getLong(String name, long defaultValue) {
         return DeviceConfig.getLong(DeviceConfig.NAMESPACE_SYSTEMUI, name, defaultValue);

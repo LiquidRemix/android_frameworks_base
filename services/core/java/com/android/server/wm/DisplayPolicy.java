@@ -870,6 +870,8 @@ public class DisplayPolicy {
                 if (canToastShowWhenLocked(callingPid)) {
                     attrs.flags |= WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED;
                 }
+                // Toasts can't be clickable
+                attrs.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
                 break;
         }
 
@@ -2817,7 +2819,11 @@ public class DisplayPolicy {
         mHandler.post(() -> {
             final int displayId = getDisplayId();
             getStatusBarManagerInternal().onDisplayReady(displayId);
-            LocalServices.getService(WallpaperManagerInternal.class).onDisplayReady(displayId);
+            final WallpaperManagerInternal wpMgr = LocalServices
+                    .getService(WallpaperManagerInternal.class);
+            if (wpMgr != null) {
+                wpMgr.onDisplayReady(displayId);
+            }
         });
     }
 
@@ -3627,7 +3633,8 @@ public class DisplayPolicy {
         if (mScreenshotHelper != null) {
             mScreenshotHelper.takeScreenshot(screenshotType,
                     mStatusBar != null && mStatusBar.isVisibleLw(),
-                    mNavigationBar != null && mNavigationBar.isVisibleLw(), mHandler);
+                    mNavigationBar != null && mNavigationBar.isVisibleLw(),
+                    mHandler, null /* completionConsumer */);
         }
     }
 

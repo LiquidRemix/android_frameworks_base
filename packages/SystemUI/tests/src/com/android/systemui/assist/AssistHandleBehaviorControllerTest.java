@@ -37,10 +37,12 @@ import androidx.test.filters.SmallTest;
 
 import com.android.internal.app.AssistUtils;
 import com.android.internal.config.sysui.SystemUiDeviceConfigFlags;
+import com.android.systemui.DumpController;
 import com.android.systemui.ScreenDecorations;
 import com.android.systemui.SysuiTestCase;
 import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.recents.OverviewProxyService;
+import com.android.systemui.statusbar.phone.NavigationModeController;
 
 import org.junit.After;
 import org.junit.Before;
@@ -49,6 +51,9 @@ import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 @SmallTest
 @RunWith(AndroidTestingRunner.class)
@@ -62,8 +67,13 @@ public class AssistHandleBehaviorControllerTest extends SysuiTestCase {
     @Mock private ScreenDecorations mMockScreenDecorations;
     @Mock private AssistUtils mMockAssistUtils;
     @Mock private Handler mMockHandler;
-    @Mock private PhenotypeHelper mMockPhenotypeHelper;
-    @Mock private AssistHandleBehaviorController.BehaviorController mMockBehaviorController;
+    @Mock private DeviceConfigHelper mMockDeviceConfigHelper;
+    @Mock private AssistHandleOffBehavior mMockOffBehavior;
+    @Mock private AssistHandleLikeHomeBehavior mMockLikeHomeBehavior;
+    @Mock private AssistHandleReminderExpBehavior mMockReminderExpBehavior;
+    @Mock private AssistHandleBehaviorController.BehaviorController mMockTestBehavior;
+    @Mock private NavigationModeController mMockNavigationModeController;
+    @Mock private DumpController mMockDumpController;
 
     @Before
     public void setup() {
@@ -74,13 +84,23 @@ public class AssistHandleBehaviorControllerTest extends SysuiTestCase {
         doAnswer(answerVoid(Runnable::run)).when(mMockHandler)
                 .postDelayed(any(Runnable.class), anyLong());
 
+        Map<AssistHandleBehavior, AssistHandleBehaviorController.BehaviorController> behaviorMap =
+                new EnumMap<>(AssistHandleBehavior.class);
+        behaviorMap.put(AssistHandleBehavior.OFF, mMockOffBehavior);
+        behaviorMap.put(AssistHandleBehavior.LIKE_HOME, mMockLikeHomeBehavior);
+        behaviorMap.put(AssistHandleBehavior.REMINDER_EXP, mMockReminderExpBehavior);
+        behaviorMap.put(AssistHandleBehavior.TEST, mMockTestBehavior);
+
         mAssistHandleBehaviorController =
                 new AssistHandleBehaviorController(
                         mContext,
                         mMockAssistUtils,
-                        mMockHandler, () -> mMockScreenDecorations,
-                        mMockPhenotypeHelper,
-                        mMockBehaviorController);
+                        mMockHandler,
+                        () -> mMockScreenDecorations,
+                        mMockDeviceConfigHelper,
+                        behaviorMap,
+                        mMockNavigationModeController,
+                        mMockDumpController);
     }
 
     @After
@@ -196,7 +216,7 @@ public class AssistHandleBehaviorControllerTest extends SysuiTestCase {
     public void showAndGo_doesNothingIfRecentlyHidden() {
         // Arrange
         when(mMockAssistUtils.getAssistComponentForUser(anyInt())).thenReturn(COMPONENT_NAME);
-        when(mMockPhenotypeHelper.getLong(
+        when(mMockDeviceConfigHelper.getLong(
                 eq(SystemUiDeviceConfigFlags.ASSIST_HANDLES_SHOWN_FREQUENCY_THRESHOLD_MS),
                 anyLong())).thenReturn(10000L);
         mAssistHandleBehaviorController.showAndGo();
@@ -277,7 +297,7 @@ public class AssistHandleBehaviorControllerTest extends SysuiTestCase {
     public void showAndGoDelayed_doesNothingIfRecentlyHidden() {
         // Arrange
         when(mMockAssistUtils.getAssistComponentForUser(anyInt())).thenReturn(COMPONENT_NAME);
-        when(mMockPhenotypeHelper.getLong(
+        when(mMockDeviceConfigHelper.getLong(
                 eq(SystemUiDeviceConfigFlags.ASSIST_HANDLES_SHOWN_FREQUENCY_THRESHOLD_MS),
                 anyLong())).thenReturn(10000L);
         mAssistHandleBehaviorController.showAndGo();
@@ -314,8 +334,8 @@ public class AssistHandleBehaviorControllerTest extends SysuiTestCase {
         mAssistHandleBehaviorController.setBehavior(AssistHandleBehavior.TEST);
 
         // Assert
-        verify(mMockBehaviorController).onModeActivated(mContext, mAssistHandleBehaviorController);
-        verifyNoMoreInteractions(mMockBehaviorController);
+        verify(mMockTestBehavior).onModeActivated(mContext, mAssistHandleBehaviorController);
+        verifyNoMoreInteractions(mMockTestBehavior);
     }
 
     @Test
@@ -324,14 +344,14 @@ public class AssistHandleBehaviorControllerTest extends SysuiTestCase {
         when(mMockAssistUtils.getAssistComponentForUser(anyInt())).thenReturn(COMPONENT_NAME);
         mAssistHandleBehaviorController.setBehavior(AssistHandleBehavior.TEST);
         mAssistHandleBehaviorController.setInGesturalModeForTest(true);
-        reset(mMockBehaviorController);
+        reset(mMockTestBehavior);
 
         // Act
         mAssistHandleBehaviorController.setBehavior(AssistHandleBehavior.OFF);
 
         // Assert
-        verify(mMockBehaviorController).onModeDeactivated();
-        verifyNoMoreInteractions(mMockBehaviorController);
+        verify(mMockTestBehavior).onModeDeactivated();
+        verifyNoMoreInteractions(mMockTestBehavior);
     }
 
     @Test
@@ -344,6 +364,6 @@ public class AssistHandleBehaviorControllerTest extends SysuiTestCase {
         mAssistHandleBehaviorController.setBehavior(AssistHandleBehavior.TEST);
 
         // Assert
-        verifyNoMoreInteractions(mMockBehaviorController);
+        verifyNoMoreInteractions(mMockTestBehavior);
     }
 }

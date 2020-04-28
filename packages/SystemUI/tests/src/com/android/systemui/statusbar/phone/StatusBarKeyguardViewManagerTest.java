@@ -39,8 +39,10 @@ import androidx.test.filters.SmallTest;
 import com.android.internal.widget.LockPatternUtils;
 import com.android.keyguard.ViewMediatorCallback;
 import com.android.systemui.SysuiTestCase;
+import com.android.systemui.classifier.FalsingManagerFake;
 import com.android.systemui.keyguard.DismissCallbackRegistry;
 import com.android.systemui.plugins.ActivityStarter.OnDismissAction;
+import com.android.systemui.plugins.FalsingManager;
 import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.statusbar.SysuiStatusBarStateController;
 
@@ -93,7 +95,8 @@ public class StatusBarKeyguardViewManagerTest extends SysuiTestCase {
                 mViewMediatorCallback, mLockPatternUtils);
         mStatusBarKeyguardViewManager.registerStatusBar(mStatusBar, mContainer,
                 mNotificationPanelView, mBiometrucUnlockController, mDismissCallbackRegistry,
-                mLockIconContainer, mNotificationContainer, mBypassController);
+                mLockIconContainer, mNotificationContainer, mBypassController,
+                new FalsingManagerFake());
         mStatusBarKeyguardViewManager.show(null);
     }
 
@@ -218,6 +221,31 @@ public class StatusBarKeyguardViewManagerTest extends SysuiTestCase {
         verify(mStatusBar, never()).animateKeyguardUnoccluding();
     }
 
+    @Test
+    public void testHiding_cancelsGoneRunnable() {
+        OnDismissAction action = mock(OnDismissAction.class);
+        Runnable cancelAction = mock(Runnable.class);
+        mStatusBarKeyguardViewManager.dismissWithAction(action, cancelAction,
+                true /* afterKeyguardGone */);
+
+        mStatusBarKeyguardViewManager.hideBouncer(true);
+        mStatusBarKeyguardViewManager.hide(0, 30);
+        verify(action, never()).onDismiss();
+        verify(cancelAction).run();
+    }
+
+    @Test
+    public void testHiding_doesntCancelWhenShowing() {
+        OnDismissAction action = mock(OnDismissAction.class);
+        Runnable cancelAction = mock(Runnable.class);
+        mStatusBarKeyguardViewManager.dismissWithAction(action, cancelAction,
+                true /* afterKeyguardGone */);
+
+        mStatusBarKeyguardViewManager.hide(0, 30);
+        verify(action).onDismiss();
+        verify(cancelAction, never()).run();
+    }
+
     private class TestableStatusBarKeyguardViewManager extends StatusBarKeyguardViewManager {
 
         public TestableStatusBarKeyguardViewManager(Context context,
@@ -232,10 +260,10 @@ public class StatusBarKeyguardViewManagerTest extends SysuiTestCase {
                 BiometricUnlockController fingerprintUnlockController,
                 DismissCallbackRegistry dismissCallbackRegistry,
                 ViewGroup lockIconContainer, View notificationContainer,
-                KeyguardBypassController bypassController) {
+                KeyguardBypassController bypassController, FalsingManager falsingManager) {
             super.registerStatusBar(statusBar, container, notificationPanelView,
                     fingerprintUnlockController, dismissCallbackRegistry, lockIconContainer,
-                    notificationContainer, bypassController);
+                    notificationContainer, bypassController, falsingManager);
             mBouncer = StatusBarKeyguardViewManagerTest.this.mBouncer;
         }
     }

@@ -20,12 +20,9 @@ import android.content.Context;
 
 import com.android.internal.widget.LockPatternUtils;
 import com.android.keyguard.ViewMediatorCallback;
-import com.android.systemui.car.CarNotificationEntryManager;
-import com.android.systemui.car.CarNotificationInterruptionStateProvider;
+import com.android.systemui.car.CarServiceProvider;
 import com.android.systemui.statusbar.car.CarFacetButtonController;
 import com.android.systemui.statusbar.car.CarStatusBarKeyguardViewManager;
-import com.android.systemui.statusbar.notification.NotificationEntryManager;
-import com.android.systemui.statusbar.notification.NotificationInterruptionStateProvider;
 import com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager;
 import com.android.systemui.volume.CarVolumeDialogComponent;
 import com.android.systemui.volume.VolumeDialogComponent;
@@ -33,8 +30,6 @@ import com.android.systemui.volume.VolumeDialogComponent;
 import javax.inject.Singleton;
 
 import dagger.Component;
-import dagger.Module;
-import dagger.Provides;
 
 /**
  * Class factory to provide car specific SystemUI components.
@@ -42,13 +37,25 @@ import dagger.Provides;
 public class CarSystemUIFactory extends SystemUIFactory {
 
     private CarDependencyComponent mCarDependencyComponent;
+    private CarServiceProvider mCarServiceProvider;
 
     @Override
-    protected void init(Context context) {
-        super.init(context);
+    protected SystemUIRootComponent buildSystemUIRootComponent(Context context) {
         mCarDependencyComponent = DaggerCarSystemUIFactory_CarDependencyComponent.builder()
                 .contextHolder(new ContextHolder(context))
                 .build();
+        return DaggerCarSystemUIRootComponent.builder()
+                .dependencyProvider(new com.android.systemui.DependencyProvider())
+                .contextHolder(new ContextHolder(context))
+                .build();
+    }
+
+    /** Gets a {@link CarServiceProvider}. */
+    public CarServiceProvider getCarServiceProvider(Context context) {
+        if (mCarServiceProvider == null) {
+            mCarServiceProvider = new CarServiceProvider(context);
+        }
+        return mCarServiceProvider;
     }
 
     public CarDependencyComponent getCarDependencyComponent() {
@@ -64,42 +71,9 @@ public class CarSystemUIFactory extends SystemUIFactory {
         return new CarVolumeDialogComponent(systemUi, context);
     }
 
-    @Override
-    public NotificationInterruptionStateProvider provideNotificationInterruptionStateProvider(
-            Context context) {
-        return new CarNotificationInterruptionStateProvider(context);
-    }
-
-    @Override
-    public boolean provideAllowNotificationLongPress() {
-        return false;
-    }
-
-    @Module
-    protected static class ContextHolder {
-        private Context mContext;
-
-        public ContextHolder(Context context) {
-            mContext = context;
-        }
-
-        @Provides
-        public Context provideContext() {
-            return mContext;
-        }
-    }
-
     @Singleton
     @Component(modules = ContextHolder.class)
     public interface CarDependencyComponent {
         CarFacetButtonController getCarFacetButtonController();
-    }
-
-    /**
-     * Use {@link CarNotificationEntryManager}, which does nothing when adding a notification.
-     */
-    @Singleton
-    public NotificationEntryManager provideNotificationEntryManager(Context context) {
-        return new CarNotificationEntryManager(context);
     }
 }

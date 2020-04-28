@@ -20,6 +20,7 @@
         xmlns:androidprv="http://schemas.android.com/apk/prv/res/android"
         package="com.android.systemui"
         android:sharedUserId="android.uid.systemui"
+        xmlns:tools="http://schemas.android.com/tools"
         coreApp="true">
 
     <!-- Using OpenGL ES 2.0 -->
@@ -58,6 +59,9 @@
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
     <uses-permission android:name="android.permission.GET_APP_OPS_STATS" />
     <uses-permission android:name="android.permission.USE_RESERVED_DISK" />
+
+    <!-- to invoke ContentSuggestionsService -->
+    <uses-permission android:name="android.permission.MANAGE_CONTENT_SUGGESTIONS"/>
 
     <!-- Networking and telephony -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -259,7 +263,8 @@
         android:theme="@style/Theme.SystemUI"
         android:defaultToDeviceProtectedStorage="true"
         android:directBootAware="true"
-        android:appComponentFactory="androidx.core.app.CoreComponentFactory">
+        tools:replace="android:appComponentFactory"
+        android:appComponentFactory=".SystemUIAppComponentFactory">
         <!-- Keep theme in sync with SystemUIApplication.onCreate().
              Setting the theme on the application does not affect views inflated by services.
              The application theme is set again from onCreate to take effect for those views. -->
@@ -363,6 +368,10 @@
         <!-- Callback for deleting screenshot notification -->
         <receiver android:name=".screenshot.GlobalScreenshot$DeleteScreenshotReceiver"
             android:exported="false" />
+
+        <!-- Callback for invoking a smart action from the screenshot notification. -->
+        <receiver android:name=".screenshot.GlobalScreenshot$SmartActionsReceiver"
+                  android:exported="false"/>
 
         <!-- started from UsbDeviceSettingsManager -->
         <activity android:name=".usb.UsbConfirmActivity"
@@ -607,6 +616,10 @@
                 android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboard|keyboardHidden"
                 android:process=":ui"
                 android:visibleToInstantApps="true">
+            <intent-filter>
+                <action android:name="android.intent.action.CHOOSER" />
+                <category android:name="android.intent.category.VOICE" />
+            </intent-filter>
         </activity>
 
         <!-- Doze with notifications, run in main sysui process for every user  -->

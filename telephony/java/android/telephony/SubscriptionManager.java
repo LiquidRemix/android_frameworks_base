@@ -393,19 +393,19 @@ public class SubscriptionManager {
     public static final String NAME_SOURCE = "name_source";
 
     /**
-     * The name_source is the default
+     * The name_source is the default, which is from the carrier id.
      * @hide
      */
     public static final int NAME_SOURCE_DEFAULT_SOURCE = 0;
 
     /**
-     * The name_source is from the SIM
+     * The name_source is from SIM EF_SPN.
      * @hide
      */
-    public static final int NAME_SOURCE_SIM_SOURCE = 1;
+    public static final int NAME_SOURCE_SIM_SPN = 1;
 
     /**
-     * The name_source is from the user
+     * The name_source is from user input
      * @hide
      */
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.P, trackingBug = 115609023)
@@ -416,6 +416,24 @@ public class SubscriptionManager {
      * @hide
      */
     public static final int NAME_SOURCE_CARRIER = 3;
+
+    /**
+     * The name_source is from SIM EF_PNN.
+     * @hide
+     */
+    public static final int NAME_SOURCE_SIM_PNN = 4;
+
+    /** @hide */
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(prefix = {"NAME_SOURCE_"},
+            value = {
+                    NAME_SOURCE_DEFAULT_SOURCE,
+                    NAME_SOURCE_SIM_SPN,
+                    NAME_SOURCE_USER_INPUT,
+                    NAME_SOURCE_CARRIER,
+                    NAME_SOURCE_SIM_PNN
+            })
+    public @interface SimDisplayNameSource {}
 
     /**
      * TelephonyProvider column name for the color of a SIM.
@@ -569,6 +587,16 @@ public class SubscriptionManager {
      * @hide
      */
     public static final String ACCESS_RULES = "access_rules";
+
+    /**
+     * TelephonyProvider column name for the encoded {@link UiccAccessRule}s from
+     * {@link UiccAccessRule#encodeRules} but for the rules that come from CarrierConfigs.
+     * Only present if there are access rules in CarrierConfigs
+     * <p>TYPE: BLOB
+     * @hide
+     */
+    public static final String ACCESS_RULES_FROM_CARRIER_CONFIGS =
+            "access_rules_from_carrier_configs";
 
     /**
      * TelephonyProvider column name identifying whether an embedded subscription is on a removable
@@ -1659,13 +1687,12 @@ public class SubscriptionManager {
      * Set display name by simInfo index with name source
      * @param displayName the display name of SIM card
      * @param subId the unique SubscriptionInfo index in database
-     * @param nameSource 0: NAME_SOURCE_DEFAULT_SOURCE, 1: NAME_SOURCE_SIM_SOURCE,
-     *                   2: NAME_SOURCE_USER_INPUT
+     * @param nameSource SIM display name source
      * @return the number of records updated or < 0 if invalid subId
      * @hide
      */
     @UnsupportedAppUsage
-    public int setDisplayName(String displayName, int subId, int nameSource) {
+    public int setDisplayName(String displayName, int subId, @SimDisplayNameSource int nameSource) {
         if (VDBG) {
             logd("[setDisplayName]+  displayName:" + displayName + " subId:" + subId
                     + " nameSource:" + nameSource);
@@ -2578,7 +2605,6 @@ public class SubscriptionManager {
      *
      * @param info The subscription to check.
      * @return whether the app is authorized to manage this subscription per its metadata.
-     * @throws IllegalArgumentException if this subscription is not embedded.
      */
     public boolean canManageSubscription(SubscriptionInfo info) {
         return canManageSubscription(info, mContext.getPackageName());
@@ -2594,24 +2620,22 @@ public class SubscriptionManager {
      * @param info The subscription to check.
      * @param packageName Package name of the app to check.
      * @return whether the app is authorized to manage this subscription per its access rules.
-     * @throws IllegalArgumentException if this subscription is not embedded.
      * @hide
      */
     public boolean canManageSubscription(SubscriptionInfo info, String packageName) {
-        if (!info.isEmbedded()) {
-            throw new IllegalArgumentException("Not an embedded subscription");
-        }
-        if (info.getAccessRules() == null) {
+        if (info == null || info.getAllAccessRules() == null) {
             return false;
         }
         PackageManager packageManager = mContext.getPackageManager();
         PackageInfo packageInfo;
         try {
-            packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
+            packageInfo = packageManager.getPackageInfo(packageName,
+                PackageManager.GET_SIGNING_CERTIFICATES);
         } catch (PackageManager.NameNotFoundException e) {
-            throw new IllegalArgumentException("Unknown package: " + packageName, e);
+            logd("Unknown package: " + packageName);
+            return false;
         }
-        for (UiccAccessRule rule : info.getAccessRules()) {
+        for (UiccAccessRule rule : info.getAllAccessRules()) {
             if (rule.getCarrierPrivilegeStatus(packageInfo)
                     == TelephonyManager.CARRIER_PRIVILEGE_STATUS_HAS_ACCESS) {
                 return true;
@@ -2945,6 +2969,7 @@ public class SubscriptionManager {
      * permission or had carrier privilege permission on the subscription.
      * {@link TelephonyManager#hasCarrierPrivileges()}
      *
+     * @throws IllegalStateException if Telephony service is in bad state.
      * @throws SecurityException if the caller doesn't meet the requirements
      *             outlined above.
      *
@@ -3002,7 +3027,7 @@ public class SubscriptionManager {
         // to the caller.
         boolean hasCarrierPrivilegePermission = TelephonyManager.from(mContext)
                 .hasCarrierPrivileges(info.getSubscriptionId())
-                || (info.isEmbedded() && canManageSubscription(info));
+                || canManageSubscription(info);
         return hasCarrierPrivilegePermission;
     }
 

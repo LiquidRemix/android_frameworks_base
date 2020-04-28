@@ -53,6 +53,8 @@ void sigHandler(int sig) {
     if (gStatsService != nullptr) {
         gStatsService->Terminate();
     }
+    ALOGW("statsd terminated on receiving signal %d.", sig);
+    exit(1);
 }
 
 void registerSigHandler()
@@ -78,7 +80,7 @@ int main(int /*argc*/, char** /*argv*/) {
     ps->giveThreadPoolName();
     IPCThreadState::self()->disableBackgroundScheduling(true);
 
-    ::android::hardware::configureRpcThreadpool(1 /*threads*/, false /*willJoin*/);
+    ::android::hardware::configureRpcThreadpool(4 /*threads*/, false /*willJoin*/);
 
     std::shared_ptr<LogEventQueue> eventQueue =
             std::make_shared<LogEventQueue>(2000 /*buffer limit. Buffer is NOT pre-allocated*/);

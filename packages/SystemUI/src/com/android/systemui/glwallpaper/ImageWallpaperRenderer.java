@@ -46,6 +46,7 @@ public class ImageWallpaperRenderer implements GLWallpaperRenderer,
     private static final String TAG = ImageWallpaperRenderer.class.getSimpleName();
     private static final float SCALE_VIEWPORT_MIN = 1f;
     private static final float SCALE_VIEWPORT_MAX = 1.1f;
+    private static final boolean DEBUG = true;
 
     private final WallpaperManager mWallpaperManager;
     private final ImageGLProgram mProgram;
@@ -107,12 +108,23 @@ public class ImageWallpaperRenderer implements GLWallpaperRenderer,
     }
 
     private boolean loadBitmap() {
+        if (DEBUG) {
+            Log.d(TAG, "loadBitmap: mBitmap=" + mBitmap);
+        }
         if (mWallpaperManager != null && mBitmap == null) {
             mBitmap = mWallpaperManager.getBitmap();
             mWallpaperManager.forgetLoadedWallpaper();
             if (mBitmap != null) {
-                mSurfaceSize.set(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
+                float scale = (float) mScissor.height() / mBitmap.getHeight();
+                int surfaceHeight = Math.max(mScissor.height(), mBitmap.getHeight());
+                int surfaceWidth = scale > 1f
+                        ? Math.round(mBitmap.getWidth() * scale)
+                        : mBitmap.getWidth();
+                mSurfaceSize.set(0, 0, surfaceWidth, surfaceHeight);
             }
+        }
+        if (DEBUG) {
+            Log.d(TAG, "loadBitmap done, surface size=" + mSurfaceSize);
         }
         return mBitmap != null;
     }
@@ -188,16 +200,28 @@ public class ImageWallpaperRenderer implements GLWallpaperRenderer,
 
     @Override
     public void onRevealStart(boolean animate) {
+        if (DEBUG) {
+            Log.v(TAG, "onRevealStart: start, anim=" + animate);
+        }
+
         if (animate) {
             mScissorMode = true;
             // Use current display area of texture.
             mWallpaper.adjustTextureCoordinates(mSurfaceSize, mScissor, mXOffset, mYOffset);
         }
         mProxy.preRender();
+
+        if (DEBUG) {
+            Log.v(TAG, "onRevealStart: done");
+        }
     }
 
     @Override
     public void onRevealEnd() {
+        if (DEBUG) {
+            Log.v(TAG, "onRevealEnd: start, mScissorMode=" + mScissorMode);
+        }
+
         if (mScissorMode) {
             mScissorMode = false;
             // reset texture coordinates to use full texture.
@@ -206,6 +230,10 @@ public class ImageWallpaperRenderer implements GLWallpaperRenderer,
             mProxy.requestRender();
         }
         mProxy.postRender();
+
+        if (DEBUG) {
+            Log.v(TAG, "onRevealEnd: done");
+        }
     }
 
     @Override
@@ -218,6 +246,7 @@ public class ImageWallpaperRenderer implements GLWallpaperRenderer,
         out.print(prefix); out.print("mXOffset="); out.print(mXOffset);
         out.print(prefix); out.print("mYOffset="); out.print(mYOffset);
         out.print(prefix); out.print("threshold="); out.print(mImageProcessHelper.getThreshold());
+        out.print(prefix); out.print("mReveal="); out.print(mImageRevealHelper.getReveal());
         mWallpaper.dump(prefix, fd, out, args);
     }
 }
