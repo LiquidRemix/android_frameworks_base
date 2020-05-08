@@ -215,7 +215,7 @@ public class EglHelper {
             return false;
         }
 
-        int[] attrib_list = new int[5];
+        attrib_list = new int[5];
         int idx = 0;
         attrib_list[idx++] = EGL_CONTEXT_CLIENT_VERSION;
         attrib_list[idx++] = 2;
