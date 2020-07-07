@@ -144,6 +144,9 @@ public class NotificationStackScrollLayoutTest extends SysuiTestCase {
         mDependency.injectTestDependency(NotificationLockscreenUserManager.class,
                 mLockscreenUserManager);
         mDependency.injectTestDependency(StatusBarStateController.class, mBarState);
+        mDependency.injectTestDependency(SysuiStatusBarStateController.class, mBarState);
+        mDependency.injectTestDependency(NotificationLockscreenUserManager.class,
+                mLockscreenUserManager);
         mDependency.injectTestDependency(MetricsLogger.class, mMetricsLogger);
         mDependency.injectTestDependency(NotificationRemoteInputManager.class,
                 mRemoteInputManager);
